@@ -7,7 +7,7 @@
 #include "xil_printf.h"
 
 #define numberofreg 16 //todo-->have this redefined to use a more global variable
-#define dimension (4*Array_dim*Tile_dim) //number of PE's found either horizontally or vertically
+#define SPAR_dimension (4*Array_dim*Tile_dim) //number of PE's found either horizontally or vertically
 #define minimumNumOfVReg 4 //minimum number of virtual registers that need to fit in spar to perform operations
 int usedRegisters = 0;
 
@@ -26,49 +26,42 @@ void Deallocate_M(Matrix *m){
 }
 
 void Store_M(Matrix* m, int rd, AllocationTable *table) { //does not actually store a matrix. Just allocates it in the allocation table
-	int colFol = ceil((float)m->cols/(float)dimension);
-	int rowFol = ceil((float)m->rows/(float)dimension);
+	int colFol = ceil((float)m->cols/(float)SPAR_dimension);
+	int rowFol = ceil((float)m->rows/(float)SPAR_dimension);
 
 	int copies = colFol * rowFol;
-	printf("copies: %d, dimension: %d\n", copies, dimension);
+//	printf("copies: %d, dimension: %d\n", copies, SPAR_dimension);
 	if (copies > numberofreg/minimumNumOfVReg) //todo-->need to actually implement this if statement properly
 	{
 		printf("not enough registers to load array");
 		return; //exits the function if there are not enough registers
 	}
 
-	xil_printf("here2.1\n");
-	m->placement = malloc(copies*sizeof(int)); //allocate enough memory for the array
 	m->orientation = 0;
-	xil_printf("here2.2\n");
 	allocateVRegM(m, rd, table);
 	xil_printf("new status: %d\n", table->vreg[2].status);
 }
 
 void Store_M_Transpose(Matrix *m, int rd, AllocationTable *table) {
 	//do not needs to change "fold" calculations since the dimensions are square
-	int colFol = ceil((float)m->cols/(float)dimension);
-	int rowFol = ceil((float)m->rows/(float)dimension);
+	int colFol = ceil((float)m->cols/(float)SPAR_dimension);
+	int rowFol = ceil((float)m->rows/(float)SPAR_dimension);
 
 	int copies = colFol * rowFol;
-	printf("copies: %d, dimension: %d\n", copies, dimension);
+	printf("copies: %d, dimension: %d\n", copies, SPAR_dimension);
 	if (copies*minimumNumOfVReg > numberofreg)
 	{
 		printf("not enough registers to load array\n");
 		return; //exits the function if there are not enough registers
 	}
 
-	xil_printf("here2.1\n");
-	m->placement = malloc(copies*sizeof(int)); //allocate enough memory for the array
 	m->orientation = 1; //set orientation as 1
-	xil_printf("here2.2\n");
-
 	allocateVRegM(m, rd, table);
 }
 
 void Load_M(Matrix *m, int rs) { //load matrix from spar to memory
 	//read data to array
-	int colFol = ceil((float)m->cols/(float)dimension); //may come up with another way to get this value from the Matrix struct
+	int colFol = ceil((float)m->cols/(float)SPAR_dimension); //may come up with another way to get this value from the Matrix struct
 	int s = 0;
 	int t = 0;
 	for (t = 0; t < m->rows; t += 1)
@@ -77,7 +70,7 @@ void Load_M(Matrix *m, int rs) { //load matrix from spar to memory
 		for (s = 0; s < m->cols; s += 1)
 		{
 			//go back and check the *memory accesss before running
-			m->memory[offset+s] = READ_REG((s/(4*Tile_dim))%Array_dim, (t/(4*Tile_dim))%Array_dim, (s/4)%Tile_dim, (t/4)%Tile_dim, ((s*4 +t)%4 + s*4)%16, rs + (minimumNumOfVReg * ((s/dimension)*colFol + (t/dimension))));
+			m->memory[offset+s] = READ_REG((s/(4*Tile_dim))%Array_dim, (t/(4*Tile_dim))%Array_dim, (s/4)%Tile_dim, (t/4)%Tile_dim, ((s*4 +t)%4 + s*4)%16, rs + (minimumNumOfVReg * ((s/SPAR_dimension)*colFol + (t/SPAR_dimension))));
 //				xil_printf("Read Value: %d\n", READ_REG((s/(4*Tile_dim))%Array_dim, (t/(4*Tile_dim))%Array_dim, (s/4)%Tile_dim, (t/4)%Tile_dim, ((s*4 +t)%4 + s*4)%16, rs + (numberOfVirtualRegisters * ((s/dimension)*colFol + (t/dimension)))));
 		}
 	}

@@ -74,8 +74,8 @@
 #define q 1							//size of outputs
 #define epoch 1
 
-#define colN 20
-#define rowN 20
+#define colN 40
+#define rowN 40
 
 
 //Function prototypes
@@ -141,11 +141,18 @@ int main()
 	//"Store" the matrix into a virtual register (actually just allocate it to a virtual register in the allocation table)
 	Store_M(&m, 1, &allocation_table);
 	Store_M(&n, 2, &allocation_table);
+	Store_M(&m, 3, &allocation_table);
 	xil_printf("here3\n");
+
+	//void safeAllocatePRegs(int vRegNum, int maxDim, int protectedVReg[], int numProtected, AllocationTable *table)
+	int protectV[] = {1};
+	safeAllocatePRegs(1, 24, protectV, 0, &allocation_table);
+	safeAllocatePRegs(2, 24, protectV, 0, &allocation_table);
+	printTablePReg(&allocation_table);
+	safeAllocatePRegs(3, 24, protectV, 1, &allocation_table);
 
 	//print allocation table vreg
 	printTableVReg(&allocation_table);
-
-
+	printTablePReg(&allocation_table);
     return 0;
 }

@@ -10,21 +10,20 @@
 #ifndef SRC_ALLOCATIONTABLE_H_
 #define SRC_ALLOCATIONTABLE_H_
 
-#define Num_VREG 16
-#define Num_PREG 16
+#define Num_VREG 8
+#define Num_PREG 8
+#define Max_Num_PREG_Per_VREG 6
 
 typedef struct Matrix{
 	int *memory; //type subject to change. May convert to the fixed point type
 	int rows; //type subject to change
 	int cols;
 	int orientation; //0=regular 1=transpose. Need to know orientation before multiplication and other operations. -1 if just in memory (not spar)
-	int *placement;
 } Matrix;
 
 
 typedef struct Vector{
 	int *vector;
-	int *placement; //placement should only be touched inside of the allocation table functions
 	int size;
 	int orientation; //0 = stored in columns, 1 = stored in rows
 } Vector;
@@ -38,7 +37,7 @@ typedef struct VRegData{ //raw data representation of a virtual register (made o
 typedef struct VReg{
 	void *m; //void pointer to a matrix or vector
 	int type; //0 means matrix. 1 means vector. 2 means scalar. 10 means VRegData
-	int *placement; //an array that keeps track of the different parts of a matrix. //placement should only be touched inside of the allocation table functions
+	int placement[Max_Num_PREG_Per_VREG]; //an array that keeps track of the different parts of a matrix. //placement should only be touched inside of the allocation table functions
 	int status; //more general placement of the data. -1 = empty. 0 means in memory. 1 means in SPAR. 2 means in spar not matching memory. 3 invalid in spar.
 }VReg;
 
@@ -56,10 +55,10 @@ void resetTable(AllocationTable *table);
 
 void allocateVRegM(Matrix *m, int vRegNum, AllocationTable *table);
 void allocateVRegV(Vector *v, int vRegNum, AllocationTable *table);
-void safeAllocateReg(int vRegNum, int maxArraySize, int protectedVReg[], int numProtected, AllocationTable *table);
+void safeAllocatePRegs(int vRegNum, int maxDim, int protectedVReg[], int numProtected, AllocationTable *table);
 
 void removeVRegFromPRegs(int vRegNum, AllocationTable *table);
-void loadToVRegDataToPReg(int vRegNum, int pRegNum, int startRow, int startCol, int endRow, int endCol, AllocationTable *table);
+void loadVRegDataToPReg(int vRegNum, int pRegNum, int startRow, int startCol, int endRow, int endCol, AllocationTable *table);
 void storePRegToMem(int pRegNum, int startRow, int startCol, int endRow, int endCol, Matrix *m); //move data from a
 
 void printTableVReg(AllocationTable *table);
