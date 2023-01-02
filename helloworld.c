@@ -97,6 +97,34 @@ unsigned int READ_REG(int Tile_i, int Tile_j, int BRAM_i, int BRAM_j, int PE, in
 //Allocation Table for the VM
 static AllocationTable allocation_table;
 
+void printPReg(int reg){
+	int data = 0;
+	for(int x=0; x<Array_dim; x++)
+	{
+		for(int y=0; y<Tile_dim; y++)
+		{
+			for(int pe=0; pe<16; pe+=4)
+			{
+				for(int i=0; i<Array_dim; i++)
+				{
+					for(int j=0; j<Tile_dim; j++)
+					{
+						data = READ_REG(i, x, j, y, pe, reg);
+						printf("%d, ", data);
+						data = READ_REG(i, x, j, y, pe+1, reg);
+						printf("%d, ", data);
+						data = READ_REG(i, x, j, y, pe+2, reg);
+						printf("%d, ", data);
+						data = READ_REG(i, x, j, y, pe+3, reg);
+						printf("%d, ", data);
+					}
+				}
+				printf("\n");
+			}
+		}
+	}
+}
+
 int main()
 {
 	init_platform();
@@ -142,17 +170,27 @@ int main()
 	Store_M(&m, 1, &allocation_table);
 	Store_M(&n, 2, &allocation_table);
 	Store_M(&m, 3, &allocation_table);
-	xil_printf("here3\n");
+	xil_printf("here3\n\n\n");
 
 	//void safeAllocatePRegs(int vRegNum, int maxDim, int protectedVReg[], int numProtected, AllocationTable *table)
 	int protectV[] = {1};
-	safeAllocatePRegs(1, 24, protectV, 0, &allocation_table);
+	safeAllocatePRegs(1, 24, protectV, 0, &allocation_table); //allocate pregs and move data to SPAR
 	safeAllocatePRegs(2, 24, protectV, 0, &allocation_table);
-	printTablePReg(&allocation_table);
-	safeAllocatePRegs(3, 24, protectV, 1, &allocation_table);
+
+	for(int a=0; a < rowN; a++)
+	{
+		for(int b=0; b < colN; b++)
+		{
+			printf("%.2f,", (float)n.memory[a*(n.cols)+b]/(1<<16));
+		}
+		usleep_A53(100);
+		printf("\n");
+	}
 
 	//print allocation table vreg
 	printTableVReg(&allocation_table);
 	printTablePReg(&allocation_table);
+
+	printRegFile(0,0,0,0,32);
     return 0;
 }

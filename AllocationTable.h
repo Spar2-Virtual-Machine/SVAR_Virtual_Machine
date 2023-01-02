@@ -59,7 +59,7 @@ void safeAllocatePRegs(int vRegNum, int maxDim, int protectedVReg[], int numProt
 
 void removeVRegFromPRegs(int vRegNum, AllocationTable *table);
 void loadVRegDataToPReg(int vRegNum, int pRegNum, int startRow, int startCol, int endRow, int endCol, AllocationTable *table);
-void storePRegToMem(int pRegNum, int startRow, int startCol, int endRow, int endCol, Matrix *m); //move data from a
+void storePRegToMem(int vRegNum, int pRegNum, int startRow, int startCol, int endRow, int endCol); //move data from a
 
 void printTableVReg(AllocationTable *table);
 void printTablePReg(AllocationTable *table);

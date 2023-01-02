@@ -108,8 +108,16 @@ void safeAllocatePRegs(int vRegNum, int maxDim, int protectedVReg[], int numProt
 				table->vreg[vRegNum].placement[i] = table->nextRegToUpdate;
 
 				//write the data segment to the register in SPAR
-				loadVRegDataToPReg(vRegNum, table->nextRegToUpdate, 0, 0, 0, 0, table); //todo: just a placeholder for now
+				int startRow = (i/horizontalLay)*maxDim;
+				int startCol = (i%horizontalLay)*maxDim;
+				int endRow = startRow+maxDim-1;
+				if(endRow > m->rows) {endRow = m->rows - 1;}
+				int endCol = startCol+maxDim-1;
+				if(endCol > m->cols) {endCol = m->cols - 1;}
+				printf("StartRow: %d, StartCol: %d, EndRow: %d, EndCol: %d\n", startRow, startCol, endRow, endCol);
+				loadVRegDataToPReg(vRegNum, table->nextRegToUpdate, startRow, startCol, endRow, endCol, table); //todo: just a placeholder for now
 
+				//increment the number registers assigned
 				i++;
 				//update Round Robin pointer position
 				table->nextRegToUpdate++;
@@ -132,15 +140,20 @@ void loadVRegDataToPReg(int vRegNum, int pRegNum, int startRow, int startCol, in
 	//todo --> add compatibility with vectors and scalars in the form of another if statement or function
 	//todo --> add ability to orient the way it should be
 //	VReg *vreg = &table->vreg[vRegNum];
+	printf("Register: %d\n\n\n", pRegNum);
 	Matrix *m = (table->vreg[vRegNum].m);
 	for(int i = startRow; i <= endRow; i++)
 	{
 		int s = i-startRow;
-		for(int j = startCol; i <= endCol; i++)
+		for(int j = startCol; j <= endCol; j++)
 		{
-			int t = i-endRow;
+			int t = j-startCol;
 			//thinking that s and t should be replaced by i-startRow and j-endRow
 			WRITE_REG((s/(4*Tile_dim))%Array_dim, (t/(4*Tile_dim))%Array_dim, (s/4)%Tile_dim, (t/4)%Tile_dim, ((s*4 +t)%4 + s*4)%16, pRegNum, m->memory[i + j*(m->cols)]);
+//			xil_printf("s: %d, t: %d;  ", s, t);
+//			xil_printf("Array: %d, %d", (s/(4*Tile_dim))%Array_dim,(t/(4*Tile_dim))%Array_dim);
+//			xil_printf(" Tile: %d, %d", (s/4)%Tile_dim, (t/4)%Tile_dim);
+//			xil_printf(" PE: %d \n", ((s*4 +t)%4 + s*4)%16);
 		}
 	}
 }
@@ -148,6 +161,7 @@ void loadVRegDataToPReg(int vRegNum, int pRegNum, int startRow, int startCol, in
 void removeVRegFromPRegs(int vRegNum, AllocationTable *table)
 {
 	//todo --> store the data in the physical register to memory. Maybe overwrite everything with 0.
+	//todo: use placement in VREG instead of looping through all of the PE's
 	for(int i = 0; i < Num_PREG; i++)
 	{
 		if(table->preg[i]==vRegNum)
