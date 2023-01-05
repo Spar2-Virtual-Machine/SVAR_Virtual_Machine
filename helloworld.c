@@ -135,7 +135,6 @@ int main()
 
 	//setup allocation table
 	resetTable(&allocation_table);
-	printTableVReg(&allocation_table);
 
 	printf("-------------------------------------------------------------------------\r\n");
 //	printRegFile(0, 0, 0, 0, 32);
@@ -143,10 +142,7 @@ int main()
 	int arr1[rowN][colN];
 //	xil_printf("arr1%p\n", arr1);
 	int arr2[rowN][colN];
-//	xil_printf("arr2%p\n", arr2);
-//	int arr3[rowN][colN];
-//	int arr4[rowN][colN];
-	//fill the arrays
+	int arr3[rowN][colN];
 	xil_printf("%p\n", allocation_table);
 	for(int i=0; i < rowN; i++)
 	{
@@ -154,6 +150,7 @@ int main()
 		{
 			arr1[i][j] = j+i;
 			arr2[i][j] = 0x00010000;
+			arr3[i][j] = 0;
 		}
 	}
 	xil_printf("here1\n");
@@ -164,28 +161,32 @@ int main()
 	m.memory = (int*)&arr1; //did not free memory, but I'm not being efficient here anyways
 	Declare_M(&n, rowN, colN);
 	n.memory = (int*)&arr2;
+	Matrix result;
+	Declare_M(&result, rowN, colN);
+	result.memory = (int*)&arr3;
 	xil_printf("here2\n");
 
 	//"Store" the matrix into a virtual register (actually just allocate it to a virtual register in the allocation table)
 	Store_M(&m, 1, &allocation_table);
 	Store_M(&n, 2, &allocation_table);
-	Store_M(&m, 3, &allocation_table);
-	xil_printf("here3\n\n\n");
+//	Store_M(&result, 3, &allocation_table);
+
+	printVRegData(1, &allocation_table);
 
 	//void safeAllocatePRegs(int vRegNum, int maxDim, int protectedVReg[], int numProtected, AllocationTable *table)
-	int protectV[] = {1};
-	safeAllocatePRegs(1, 24, protectV, 0, &allocation_table); //allocate pregs and move data to SPAR
-	safeAllocatePRegs(2, 24, protectV, 0, &allocation_table);
-
-	for(int a=0; a < rowN; a++)
-	{
-		for(int b=0; b < colN; b++)
-		{
-			printf("%.2f,", (float)n.memory[a*(n.cols)+b]/(1<<16));
-		}
-		usleep_A53(100);
-		printf("\n");
-	}
+	E_Add_MM(1, 2, 3, &allocation_table);
+//
+//	storePRegToMem(3, 8, 0, 0, 23, 23, &allocation_table);
+//
+//	for(int a=0; a < rowN; a++)
+//	{
+//		for(int b=0; b < colN; b++)
+//		{
+//			printf("%.2f,", (float)result.memory[a*(n.cols)+b]/(1<<16));
+//		}
+//		usleep_A53(100);
+//		printf("\n");
+//	}
 
 	//print allocation table vreg
 	printTableVReg(&allocation_table);

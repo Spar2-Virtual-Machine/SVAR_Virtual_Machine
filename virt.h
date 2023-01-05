@@ -19,6 +19,9 @@ void Store_M(Matrix* m, int rd, AllocationTable *table);
 void Store_M_Transpose(Matrix *m, int rd, AllocationTable *table);
 void Load_M(Matrix *m, int rs);
 
+//Arithmetic
+void E_Add_MM(int rs1, int rs2, int rd, AllocationTable *table);
+
 //compound
 
 
