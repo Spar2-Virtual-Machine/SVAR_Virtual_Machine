@@ -492,13 +492,13 @@ int execute(int opcode, int rd, int rs1, int rs2)
 	int instruction = (opcode<<26) + (rd<<21) + (rs1 << 16) + (rs2 << 11);
 	BIT_SERIAL_mWriteReg(XPAR_BIT_SERIAL_0_S00_AXI_BASEADDR, BIT_SERIAL_S00_AXI_SLV_REG1_OFFSET, 0x00000000+LEN);//start = 0, reset = 0
 	BIT_SERIAL_mWriteReg(XPAR_BIT_SERIAL_0_S00_AXI_BASEADDR, BIT_SERIAL_S00_AXI_SLV_REG0_OFFSET, instruction);//instruction
-	usleep_A53(12);
+	usleep_A53(120);
 	BIT_SERIAL_mWriteReg(XPAR_BIT_SERIAL_0_S00_AXI_BASEADDR, BIT_SERIAL_S00_AXI_SLV_REG1_OFFSET, 0x00000001+LEN);//start = 0, reset = 1
-	usleep_A53(12);
+	usleep_A53(120);
 	BIT_SERIAL_mWriteReg(XPAR_BIT_SERIAL_0_S00_AXI_BASEADDR, BIT_SERIAL_S00_AXI_SLV_REG1_OFFSET, 0x00000003+LEN);//start = 1, reset = 1
-	usleep_A53(12);
+	usleep_A53(120);
 	BIT_SERIAL_mWriteReg(XPAR_BIT_SERIAL_0_S00_AXI_BASEADDR, BIT_SERIAL_S00_AXI_SLV_REG1_OFFSET, 0x00000001+LEN);//start = 0, reset = 1
-	usleep_A53(13);
+	usleep_A53(130);
 	return 0;
 }
 

@@ -75,7 +75,7 @@
 #define epoch 1
 
 #define colN 40
-#define rowN 40
+#define rowN 30
 
 
 //Function prototypes
@@ -148,9 +148,9 @@ int main()
 	{
 		for(int j=0; j < colN; j++)
 		{
-			arr1[i][j] = j+i;
-			arr2[i][j] = 0x00010000;
-			arr3[i][j] = 0;
+			arr1[i][j] = j;
+			arr2[i][j] = (2)<<16;
+			arr3[i][j] = (2)<<16;
 		}
 	}
 	xil_printf("here1\n");
@@ -161,37 +161,43 @@ int main()
 	m.memory = (int*)&arr1; //did not free memory, but I'm not being efficient here anyways
 	Declare_M(&n, rowN, colN);
 	n.memory = (int*)&arr2;
-	Matrix result;
-	Declare_M(&result, rowN, colN);
-	result.memory = (int*)&arr3;
-	xil_printf("here2\n");
+
 
 	//"Store" the matrix into a virtual register (actually just allocate it to a virtual register in the allocation table)
-	Store_M(&m, 1, &allocation_table);
-	Store_M(&n, 2, &allocation_table);
-//	Store_M(&result, 3, &allocation_table);
-
-	printVRegData(1, &allocation_table);
+//	Store_M_Transpose(&m, 1, &allocation_table);
+//	Store_M_Transpose(&n, 2, &allocation_table);
+//	Store_M_Transpose(&m, 4, &allocation_table);
+//	Store_M_Transpose(&n, 5, &allocation_table);
+//	Store_M_Transpose(&n, 7, &allocation_table);
 
 	//void safeAllocatePRegs(int vRegNum, int maxDim, int protectedVReg[], int numProtected, AllocationTable *table)
-	E_Add_MM(1, 2, 3, &allocation_table);
-//
-//	storePRegToMem(3, 8, 0, 0, 23, 23, &allocation_table);
-//
-//	for(int a=0; a < rowN; a++)
-//	{
-//		for(int b=0; b < colN; b++)
-//		{
-//			printf("%.2f,", (float)result.memory[a*(n.cols)+b]/(1<<16));
-//		}
-//		usleep_A53(100);
-//		printf("\n");
-//	}
+//	E_Add_MM(1, 2, 3, &allocation_table);
+//	E_Mul_MM(4, 5, 6, &allocation_table);
+//	Accumulate_M(6, 7, 0, &allocation_table);
+//	ShiftEast_M(6, 7, &allocation_table);
 
+
+//	copyFromPRegsToVRegData(4, &allocation_table);
+//	printVRegData(4, &allocation_table);
+
+	Vector v1, v2;
+	Declare_V(&v1, rowN);
+	v1.memory = (int*)&arr1;
+	Declare_V(&v2, rowN);
+	v2.memory = (int*)&arr2;
+	Store_V(&v1, 1, &allocation_table);
+	Store_V(&v2, 2, &allocation_table);
+
+	E_Add_VV(1, 2, 3, &allocation_table);
+
+	printVRegData(1, &allocation_table);
+	printVRegData(2, &allocation_table);
+	printVRegData(3, &allocation_table);
 	//print allocation table vreg
 	printTableVReg(&allocation_table);
 	printTablePReg(&allocation_table);
 
-	printRegFile(0,0,0,0,32);
+
+	printRegFile(0,0,0,0,9);
     return 0;
 }

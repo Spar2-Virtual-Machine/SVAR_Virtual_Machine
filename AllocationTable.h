@@ -13,7 +13,7 @@
 #define Num_VREG 8
 #define Num_PREG 16
 #define Max_Num_PREG_Per_VREG 6
-#define VREG_Data_Size 3200 //arbitrarily chosen
+#define VREG_Data_Size 3200 //arbitrarily chosen for now
 
 typedef struct Matrix{
 	int *memory; //type subject to change. May convert to the fixed point type
@@ -23,7 +23,7 @@ typedef struct Matrix{
 
 
 typedef struct Vector{
-	int *vector;
+	int *memory;
 	int size;
 } Vector;
 
@@ -53,13 +53,15 @@ void resetVRegs(AllocationTable *table);
 void resetTable(AllocationTable *table);
 
 void allocateVRegM(Matrix *m, int vRegNum, int orientation, AllocationTable *table);
+void allocateVRegM_T(Matrix *m, int vRegNum, int orientation, AllocationTable *table);
 void allocateVRegV(Vector *v, int vRegNum, AllocationTable *table);
 void safeAllocatePRegs(int vRegNum, int maxDim, int protectedVReg[], int numProtected, AllocationTable *table);
 void safeAllocateEmptyPRegs(int vRegNum, int maxDim, int protectedVReg[], int numProtected, AllocationTable *table); //allocate without loading new data to SPAR
 
 void removeVRegFromPRegs(int vRegNum, AllocationTable *table);
-void loadVRegDataToPReg(int vRegNum, int pRegNum, int startRow, int startCol, int endRow, int endCol, AllocationTable *table);
-void storePRegToMem(int vRegNum, int pRegNum, int startRow, int startCol, int endRow, int endCol, AllocationTable *table); //move data from SPAR to memory
+void loadVRegDataToPReg_M(int vRegNum, int pRegNum, int startRow, int startCol, int endRow, int endCol, AllocationTable *table);
+void loadVRegDataToPReg_V(int vRegNum, int pRegNum, int startRow, int endRow, AllocationTable *table);
+void copyFromPRegsToVRegData(int vRegNum, AllocationTable *table); //move data from SPAR to memory
 
 void printTableVReg(AllocationTable *table);
 void printTablePReg(AllocationTable *table);
