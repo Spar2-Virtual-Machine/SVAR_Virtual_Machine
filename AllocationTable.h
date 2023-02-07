@@ -66,6 +66,7 @@ void copyFromPRegsToVRegData(int vRegNum, AllocationTable *table); //move data f
 void printTableVReg(AllocationTable *table);
 void printTablePReg(AllocationTable *table);
 void printVRegData(int reg, AllocationTable *table);
+void printVReginPReg(int reg, AllocationTable *table); //prints off the data in the PREGS as one ginat 2d array
 
 
 #endif /* SRC_ALLOCATIONTABLE_H_ */

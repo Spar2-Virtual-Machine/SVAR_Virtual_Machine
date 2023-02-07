@@ -120,7 +120,7 @@ void allocateVRegV(Vector *v, int vRegNum, AllocationTable *table)
 {
 	table->vreg[vRegNum].orientation = 0;
 	table->vreg[vRegNum].type = 1;
-	table->vreg[vRegNum].cols = 0; //This will count the number of times the vector is copied
+	table->vreg[vRegNum].cols = 1; //This will count the number of times the vector is copied
 	table->vreg[vRegNum].rows = v->size; //This will count the size of the vector
 
 	for(int i=0; i<v->size; i++)
@@ -159,7 +159,7 @@ void safeAllocatePRegs(int vRegNum, int maxDim, int protectedVReg[], int numProt
 				if(table->nextRegToUpdate==8){
 					printf("hitting 8 here\n");
 				}
-				if(oldReg!=-1) {removeVRegFromPRegs(oldReg, table);} //remove VReg data from PRegs. Copy into memory. unassign all of the other PRegs
+				if(oldReg>=0) {removeVRegFromPRegs(oldReg, table);} //remove VReg data from PRegs. Copy into memory. unassign all of the other PRegs
 				//assign the current virtual register to the physical register
 				table->preg[table->nextRegToUpdate] = vRegNum;
 
@@ -195,6 +195,7 @@ void safeAllocatePRegs(int vRegNum, int maxDim, int protectedVReg[], int numProt
 		int numRegNeeded = horizontalLay*verticalLay;
 		int pointerEnd = (table->nextRegToUpdate + Num_PREG)%Num_PREG;
 		int i = 0;
+		printf("hL: %d, vL: %d\n", horizontalLay, verticalLay);
 		do
 		{
 			int oldReg = table->preg[table->nextRegToUpdate];
@@ -209,7 +210,7 @@ void safeAllocatePRegs(int vRegNum, int maxDim, int protectedVReg[], int numProt
 				if(table->nextRegToUpdate==8){
 					printf("hitting 8 here\n");
 				}
-				if(oldReg!=-1) {removeVRegFromPRegs(oldReg, table);} //remove VReg data from PRegs. Copy into memory. unassign all of the other PRegs
+				if(oldReg>=0) {removeVRegFromPRegs(oldReg, table);} //remove VReg data from PRegs. Copy into memory. unassign all of the other PRegs
 				//assign the current virtual register to the physical register
 				table->preg[table->nextRegToUpdate] = vRegNum;
 
@@ -440,19 +441,21 @@ void copyFromPRegsToVRegData(int vRegNum, AllocationTable *table) 	//move data f
 	if(table->vreg[vRegNum].type==1 && table->vreg[vRegNum].orientation==0)
 	{
 		//default orientation for vector
+		printf("Copying vector vreg %d\n", vRegNum);
 		for(int placement=0; placement<6 && table->vreg[vRegNum].placement[placement] != -1; placement+=horizontalLay){ //todo replace 6 with a variable
 			if(table->vreg[vRegNum].type==0){
-				data = table->vreg[vRegNum].data;
 				colOffset = table->vreg[vRegNum].cols;
 			}
 			int pRegNum = table->vreg[vRegNum].placement[placement];
 			int startRow = 24*(placement/horizontalLay);
 			int endRow = startRow + 24;
+			if(endRow > table->vreg[vRegNum].rows) {endRow = table->vreg[vRegNum].rows;}
 			int s;
 			for(int i = startRow; i < endRow; i++)
 			{
 				s = i-startRow;
-				data[i] = READ_REG((s/(4*Tile_dim))%Array_dim, 0, (s/4)%Tile_dim, 0, (s*4)%16, pRegNum);
+				table->vreg[vRegNum].data[i] = READ_REG((s/(4*Tile_dim))%Array_dim, 0, (s/4)%Tile_dim, 0, (s*4)%16, pRegNum);
+				printf("%d, ", table->vreg[vRegNum].data[i]);
 			}
 		}
 	}
@@ -502,7 +505,7 @@ void printTableVReg(AllocationTable *table)
 		printf("Status: %.2d,\t", table->vreg[i].status);
 		printf("type: ");
 		if(table->vreg[i].type==0) {printf("Matrix");}
-		else if(table->vreg[i].type==0) {printf("Vector");}
+		else if(table->vreg[i].type==1) {printf("Vector");}
 		printf("\t");
 		printf("orientation: %d,\n", table->vreg[i].orientation);
 	}
@@ -545,5 +548,34 @@ void printVRegData(int reg, AllocationTable *table)
 			printf("%d, ", table->vreg[reg].data[i]);
 		}
 		printf("\n");
+	}
+}
+
+void printVReginPReg(int reg, AllocationTable *table)
+{
+	printf("VReg %d being printed\n", reg);
+	for(int i=0; i<6; i++) //todo: replace 6 with macro or variable
+	{
+		printf("%d, ", table->vreg[reg].placement[i]);
+	}
+	printf("\n");
+
+	//just print off the data raw from spar
+	int horizontalLay = ceil((float)table->vreg[reg].cols/(float)24); //todo: replace 24 with macro
+	for(int i=0; i<table->vreg[reg].rows; i++)
+	{
+		for(int j=0; j<table->vreg[reg].cols; j++)
+		{
+			int pcount = (i/24)*horizontalLay + (j/24); //columns/maxdim
+//			printf("pcount: %d\n", pcount);
+			int preg = table->vreg[reg].placement[pcount];
+			int s = i%24;
+			int t = j%24;
+			int x = READ_REG((s/(4*Tile_dim))%Array_dim, (t/(4*Tile_dim))%Array_dim, (s/4)%Tile_dim, (t/4)%Tile_dim, ((s*4 +t)%4 + s*4)%16, preg);
+			if(x==0)printf("x: %d, pcount: %d, preg: %d, i,j: %d,%d, s,t: %d,%d\n", x, pcount, preg, i, j, s, t);
+			printf("%d, ", x);
+		}
+		printf("\n");
+		usleep_A53(5);
 	}
 }

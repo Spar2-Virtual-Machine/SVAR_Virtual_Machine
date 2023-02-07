@@ -237,6 +237,7 @@ void CastReg_V(int rs, int orientation, AllocationTable *table) {
 	}
 }
 
+
 void Declare_M(Matrix *m, int rows, int cols){
 	//allocate enough space in memory
 	m->memory = (int*)malloc(rows*cols*sizeof(int));
@@ -297,6 +298,20 @@ void Store_V(Vector* v, int rd, AllocationTable *table){
 	allocateVRegV(v, rd, table);
 }
 
+void Load_V(Vector* v, int rs, AllocationTable *table){
+	if(table->vreg[rs].status==1 ||table->vreg[rs].status==2)
+	{
+		copyFromPRegsToVRegData(rs, table);
+	}
+	int numElements = table->vreg[rs].rows;
+	free(v->memory);
+	for(int i=0; i<numElements; i++)
+	{
+		printf("%d, ", table->vreg[rs].data[i]);
+		v->memory[i] = table->vreg[rs].data[i];
+	}
+	printf("\n");
+}
 
 ///////////////////-----------------Math Operations-------------------------------//////////////////////////
 void E_Add_MM(int rs1, int rs2, int rd, AllocationTable *table){
@@ -407,6 +422,59 @@ void E_Add_VV(int rs1, int rs2, int rd, AllocationTable *table){
 	{
 		if(table->vreg[rd].placement[i]>=0 && table->vreg[rs1].placement[i]>=0 && table->vreg[rs2].placement[i]>=0) execute(0, table->vreg[rd].placement[i], table->vreg[rs1].placement[i], table->vreg[rs2].placement[i]);
 		else break;
+	}
+}
+
+void E_Sub_VV(int rs1, int rs2, int rd, AllocationTable *table){
+	//todo: remove vreg copy data from pregs (resize vector and account for it)
+	//todo: account if registers need to be reoriented.
+	table->vreg[rd].cols = 1;
+	table->vreg[rd].rows = table->vreg[rs1].rows;
+	table->vreg[rd].orientation = table->vreg[rs1].orientation;
+	table->vreg[rd].type = 1;
+	PrepareRegMMM(rs1, rs2, rd, table);
+	for(int i=0; i<6; i++)
+	{
+		if(table->vreg[rd].placement[i]>=0 && table->vreg[rs1].placement[i]>=0 && table->vreg[rs2].placement[i]>=0) execute(1, table->vreg[rd].placement[i], table->vreg[rs1].placement[i], table->vreg[rs2].placement[i]);
+		else break;
+	}
+}
+
+void E_Mul_VV(int rs1, int rs2, int rd, AllocationTable *table){
+	table->vreg[rd].cols = 1;
+	table->vreg[rd].rows = table->vreg[rs1].rows;
+	table->vreg[rd].orientation = table->vreg[rs1].orientation;
+	table->vreg[rd].type = 1;
+	//todo: remove vreg copy data from pregs (resize vector and account for it)
+	//todo: account if registers need to be reoriented.
+	PrepareRegMMM(rs1, rs2, rd, table);
+	printTablePReg(table);
+
+	int placementCopy[6];
+	int indices[6];
+	for(int i = 0; i<6; i++)
+	{
+		placementCopy[i]=table->vreg[rd].placement[i];
+		indices[i]=i;
+	}
+
+	quicksortModified(placementCopy, 0, 5, indices);
+
+	for(int j=0; j<6; j++)
+	{
+		int i = indices[j];
+		printf("%d\n", i);
+		if(table->vreg[rd].placement[i]>=0 && table->vreg[rs1].placement[i]>=0 && table->vreg[rs2].placement[i]>=0)
+		{
+			printf("here %d\n", table->preg[table->vreg[rd].placement[i]+1]);
+			if(table->preg[table->vreg[rd].placement[i]+1]!=rd && table->preg[table->vreg[rd].placement[i]+1]>=0) //account for register above the destination register being changed.
+			{
+				printf("removing vreg from preg: %d\n", table->preg[table->vreg[rd].placement[i]+1]);
+				removeVRegFromPRegs(table->preg[table->vreg[rd].placement[i]+1], table);
+			}
+			printf("Multiplying %d x %d = %d\n",  table->vreg[rs1].placement[i], table->vreg[rs2].placement[i], table->vreg[rd].placement[i]);
+			execute(2, table->vreg[rd].placement[i], table->vreg[rs1].placement[i], table->vreg[rs2].placement[i]);
+		}
 	}
 }
 

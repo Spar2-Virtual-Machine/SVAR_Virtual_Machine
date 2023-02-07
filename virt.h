@@ -25,11 +25,14 @@ void Store_M(Matrix* m, int rd, AllocationTable *table);
 void Store_M_Transpose(Matrix *m, int rd, AllocationTable *table);
 void Load_M(Matrix *m, int rs, AllocationTable *table);
 void Store_V(Vector* v, int rd, AllocationTable *table);
+void Load_V(Vector* v, int rs, AllocationTable *table);
 //Arithmetic
 void E_Add_MM(int rs1, int rs2, int rd, AllocationTable *table);
 void E_Sub_MM(int rs1, int rs2, int rd, AllocationTable *table);
 void E_Mul_MM(int rs1, int rs2, int rd, AllocationTable *table);
 void E_Add_VV(int rs1, int rs2, int rd, AllocationTable *table);
+void E_Sub_VV(int rs1, int rs2, int rd, AllocationTable *table);
+void E_Mul_VV(int rs1, int rs2, int rd, AllocationTable *table);
 //compound
 void Accumulate_M(int rs, int rd, int tempReg, AllocationTable *table);
 

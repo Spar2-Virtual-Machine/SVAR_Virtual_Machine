@@ -187,15 +187,31 @@ int main()
 	v2.memory = (int*)&arr2;
 	Store_V(&v1, 1, &allocation_table);
 	Store_V(&v2, 2, &allocation_table);
+	Store_M(&m, 6, &allocation_table);
+	Store_M(&n, 7, &allocation_table);
 
-	E_Add_VV(1, 2, 3, &allocation_table);
+	E_Add_MM(6, 7, 8, &allocation_table);
 
-	printVRegData(1, &allocation_table);
-	printVRegData(2, &allocation_table);
-	printVRegData(3, &allocation_table);
-	//print allocation table vreg
 	printTableVReg(&allocation_table);
-	printTablePReg(&allocation_table);
+	E_Add_VV(1, 2, 3, &allocation_table);
+	printRegFile(0,0,0,0,9);
+	E_Mul_VV(1, 2, 3, &allocation_table);
+	Vector v3;
+	Declare_V(&v3, rowN);
+	Load_V(&v3, 3, &allocation_table);
+	for(int i=0; i<rowN; i++)
+	{
+		printf("%d, ", v3.memory[i]);
+	}
+	printf("\n");
+
+//	printVRegData(1, &allocation_table);
+//	printVRegData(2, &allocation_table);
+//	printVRegData(6, &allocation_table);
+	printVReginPReg(6, &allocation_table);
+//	//print allocation table vreg
+//	printTableVReg(&allocation_table);
+//	printTablePReg(&allocation_table);
 
 
 	printRegFile(0,0,0,0,9);
