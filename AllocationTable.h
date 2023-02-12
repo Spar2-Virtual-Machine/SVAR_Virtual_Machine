@@ -35,7 +35,7 @@ typedef struct VReg{
 	int cols;
 	int orientation; //0=regular 1=transpose. Need to know orientation before multiplication and other operations. -1 if just in memory (not spar)
 
-	int type; //0 means matrix. 1 means vector. 2 means scalar. 10 means VRegData
+	int type; //0 means matrix. 1 means vector. 2 means scalar
 	int placement[Max_Num_PREG_Per_VREG]; //an array that keeps track of the different parts of a matrix. //placement should only be touched inside of the allocation table functions
 	int status; //more general placement of the data. -1 = empty. 0 means in memory. 1 means in SPAR. 2 means in spar not matching memory. 3 invalid in spar.  5 Means the data is set in m but not in the VReg data
 }VReg;

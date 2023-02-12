@@ -207,12 +207,19 @@ void ShiftWest_M(int rs, int rd, AllocationTable *table){//moves the matrix in o
 }
 
 void CopyVector(int rs, int numberOfCopies, AllocationTable *table){
-	if(table->vreg[rs].orientation == 1)
+	table->vreg[rs].cols=numberOfCopies;
+	if(table->vreg[rs].orientation == 0)
 	{
-		//todo: make sure the vector is in SPAR
+		printVReginPReg(rs, table);
+		//todo: make sure the vector is in SPAR and has enough registers for copying
 		for(int i=0; i<numberOfCopies; i++)
 		{
-			ShiftEast_M(rs, rs, table);
+			printf("shifting east \n");
+			for(int j=0; j<6; j++) //todo: replace 6 with variable/macro
+			{
+				execute(5, table->vreg[rs].placement[j], table->vreg[rs].placement[j], 0);
+				printVReginPReg(rs, table);
+			}
 		}
 	}
 	else
@@ -223,6 +230,7 @@ void CopyVector(int rs, int numberOfCopies, AllocationTable *table){
 //			ShiftSouth_M(rs, rs, table);
 		}
 	}
+
 }
 
 void CastReg_V(int rs, int orientation, AllocationTable *table) {
@@ -441,7 +449,7 @@ void E_Sub_VV(int rs1, int rs2, int rd, AllocationTable *table){
 }
 
 void E_Mul_VV(int rs1, int rs2, int rd, AllocationTable *table){
-	table->vreg[rd].cols = 1;
+	table->vreg[rd].cols = 1; // number of copies for vector
 	table->vreg[rd].rows = table->vreg[rs1].rows;
 	table->vreg[rd].orientation = table->vreg[rs1].orientation;
 	table->vreg[rd].type = 1;
@@ -476,6 +484,10 @@ void E_Mul_VV(int rs1, int rs2, int rd, AllocationTable *table){
 			execute(2, table->vreg[rd].placement[i], table->vreg[rs1].placement[i], table->vreg[rs2].placement[i]);
 		}
 	}
+}
+
+void Mul_MV(int rs_m, int rs_v, int rd, AllocationTable *table){
+
 }
 
 void Reset_Registers(){

@@ -562,20 +562,60 @@ void printVReginPReg(int reg, AllocationTable *table)
 
 	//just print off the data raw from spar
 	int horizontalLay = ceil((float)table->vreg[reg].cols/(float)24); //todo: replace 24 with macro
-	for(int i=0; i<table->vreg[reg].rows; i++)
-	{
-		for(int j=0; j<table->vreg[reg].cols; j++)
+	int* data;
+	int colOffset = 0;
+
+//	for(int i=0; i<table->vreg[reg].rows; i++)
+//	{
+//		for(int j=0; j<table->vreg[reg].cols; j++)
+//		{
+//			int pcount = (i/24)*horizontalLay + (j/24); //columns/maxdim
+////			printf("pcount: %d\n", pcount);
+//			int preg = table->vreg[reg].placement[pcount];
+//			int s = i%24;
+//			int t = j%24;
+//			int x = READ_REG((s/(4*Tile_dim))%Array_dim, (t/(4*Tile_dim))%Array_dim, (s/4)%Tile_dim, (t/4)%Tile_dim, ((s*4 +t)%4 + s*4)%16, preg);
+//			if(x==0)printf("x: %d, pcount: %d, preg: %d, i,j: %d,%d, s,t: %d,%d\n", x, pcount, preg, i, j, s, t);
+//			printf("%d, ", x);
+//		}
+//		printf("\n");
+//		usleep_A53(5);
+//	}
+
+	//copy the data into an array to print off
+	data = malloc(table->vreg[reg].cols*table->vreg[reg].rows*sizeof(int));
+	colOffset = table->vreg[reg].cols;
+	for(int placement=0; placement<6 && table->vreg[reg].placement[placement] != -1; placement++){ //todo replace 6 with a variable
+		//todo change for each orientation
+		//default orientation for matrix (treating everything like a matrix even if it's just a vector
+
+		printf("colOffset/24: %d\n", (int)ceil((float)colOffset/24));
+		int startRow = 24*(placement/horizontalLay); //todo: replace 24 with variables/macros
+		int endRow = startRow + 24;
+		if(endRow > table->vreg[reg].rows) {endRow = table->vreg[reg].rows;}
+		int startCol = 24*(placement%horizontalLay);
+		int endCol = startCol + 24;
+		if(endCol > table->vreg[reg].cols) {endCol = table->vreg[reg].cols;}
+		int pRegNum = table->vreg[reg].placement[placement];
+		printf("startRow: %d, endRow: %d, startCol: %d, endCol: %d, pRegNum: %d\n", startRow, endRow, startCol, endCol, pRegNum);
+		int s, t;
+		for(int i = startRow; i < endRow; i++)
 		{
-			int pcount = (i/24)*horizontalLay + (j/24); //columns/maxdim
-//			printf("pcount: %d\n", pcount);
-			int preg = table->vreg[reg].placement[pcount];
-			int s = i%24;
-			int t = j%24;
-			int x = READ_REG((s/(4*Tile_dim))%Array_dim, (t/(4*Tile_dim))%Array_dim, (s/4)%Tile_dim, (t/4)%Tile_dim, ((s*4 +t)%4 + s*4)%16, preg);
-			if(x==0)printf("x: %d, pcount: %d, preg: %d, i,j: %d,%d, s,t: %d,%d\n", x, pcount, preg, i, j, s, t);
-			printf("%d, ", x);
+			s = i-startRow;
+			for(int j = startCol; j < endCol; j++)
+			{
+				t = j-startCol;
+				data[j + i*(colOffset)] = READ_REG((s/(4*Tile_dim))%Array_dim, (t/(4*Tile_dim))%Array_dim, (s/4)%Tile_dim, (t/4)%Tile_dim, ((s*4 +t)%4 + s*4)%16, pRegNum);
+//				printf("s,t: %d,%d  i,j: %d,%d  x: %d\n", s, t, i, j, data[j + i*colOffset]);
+			}
+		}
+	}
+	for(int i = 0; i < table->vreg[reg].rows; i++)
+	{
+		for(int j=0; j < table->vreg[reg].cols; j++)
+		{
+			printf("%d, ", data[j + i*(table->vreg[reg].cols)]);
 		}
 		printf("\n");
-		usleep_A53(5);
 	}
 }

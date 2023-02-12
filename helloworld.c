@@ -190,11 +190,16 @@ int main()
 	Store_M(&m, 6, &allocation_table);
 	Store_M(&n, 7, &allocation_table);
 
-	E_Add_MM(6, 7, 8, &allocation_table);
+//	E_Add_MM(6, 7, 8, &allocation_table);
 
 	printTableVReg(&allocation_table);
-	E_Add_VV(1, 2, 3, &allocation_table);
-	printRegFile(0,0,0,0,9);
+
+//	E_Add_VV(1, 2, 3, &allocation_table);
+
+	printRegFile(0,0,0,0,9); //here 1
+
+
+
 	E_Mul_VV(1, 2, 3, &allocation_table);
 	Vector v3;
 	Declare_V(&v3, rowN);
@@ -205,14 +210,10 @@ int main()
 	}
 	printf("\n");
 
-//	printVRegData(1, &allocation_table);
-//	printVRegData(2, &allocation_table);
-//	printVRegData(6, &allocation_table);
-	printVReginPReg(6, &allocation_table);
-//	//print allocation table vreg
-//	printTableVReg(&allocation_table);
-//	printTablePReg(&allocation_table);
-
+//	allocation_table.vreg[1].cols = 6;
+	printVReginPReg(1, &allocation_table);
+	CopyVector(1, 7, &allocation_table);
+	printVReginPReg(1, &allocation_table);
 
 	printRegFile(0,0,0,0,9);
     return 0;
