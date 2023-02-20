@@ -74,8 +74,8 @@
 #define q 1							//size of outputs
 #define epoch 1
 
-#define colN 40
-#define rowN 30
+#define colN 41
+#define rowN 29
 
 
 //Function prototypes
@@ -148,9 +148,9 @@ int main()
 	{
 		for(int j=0; j < colN; j++)
 		{
-			arr1[i][j] = j;
-			arr2[i][j] = (2)<<16;
-			arr3[i][j] = (2)<<16;
+			arr1[i][j] = j+256;
+			arr2[i][j] = (1)<<16;
+			arr3[i][j] = (1)<<16;
 		}
 	}
 	xil_printf("here1\n");
@@ -162,59 +162,34 @@ int main()
 	Declare_M(&n, rowN, colN);
 	n.memory = (int*)&arr2;
 
-
-	//"Store" the matrix into a virtual register (actually just allocate it to a virtual register in the allocation table)
-//	Store_M_Transpose(&m, 1, &allocation_table);
-//	Store_M_Transpose(&n, 2, &allocation_table);
-//	Store_M_Transpose(&m, 4, &allocation_table);
-//	Store_M_Transpose(&n, 5, &allocation_table);
-//	Store_M_Transpose(&n, 7, &allocation_table);
-
-	//void safeAllocatePRegs(int vRegNum, int maxDim, int protectedVReg[], int numProtected, AllocationTable *table)
-//	E_Add_MM(1, 2, 3, &allocation_table);
-//	E_Mul_MM(4, 5, 6, &allocation_table);
-//	Accumulate_M(6, 7, 0, &allocation_table);
-//	ShiftEast_M(6, 7, &allocation_table);
-
-
-//	copyFromPRegsToVRegData(4, &allocation_table);
-//	printVRegData(4, &allocation_table);
-
-	Vector v1, v2;
-	Declare_V(&v1, rowN);
-	v1.memory = (int*)&arr1;
-	Declare_V(&v2, rowN);
-	v2.memory = (int*)&arr2;
-	Store_V(&v1, 1, &allocation_table);
-	Store_V(&v2, 2, &allocation_table);
-	Store_M(&m, 6, &allocation_table);
-	Store_M(&n, 7, &allocation_table);
-
-//	E_Add_MM(6, 7, 8, &allocation_table);
+	Store_M(&m, 1, &allocation_table);
+	Store_M(&n, 2, &allocation_table);
+	Store_M(&m, 3, &allocation_table);
+	allocation_table.vreg[1].orientation = 1;
+	allocation_table.vreg[2].orientation = 1;
+	allocation_table.vreg[3].orientation = 0;
+	safeAllocatePRegs(1, 24, NULL, 0, &allocation_table);
+	safeAllocatePRegs(2, 24, NULL, 0, &allocation_table);
+//	safeAllocatePRegs(3, 24, NULL, 0, &allocation_table);
 
 	printTableVReg(&allocation_table);
-
-//	E_Add_VV(1, 2, 3, &allocation_table);
-
-	printRegFile(0,0,0,0,9); //here 1
-
-
-
-	E_Mul_VV(1, 2, 3, &allocation_table);
-	Vector v3;
-	Declare_V(&v3, rowN);
-	Load_V(&v3, 3, &allocation_table);
-	for(int i=0; i<rowN; i++)
-	{
-		printf("%d, ", v3.memory[i]);
-	}
-	printf("\n");
-
-//	allocation_table.vreg[1].cols = 6;
-	printVReginPReg(1, &allocation_table);
-	CopyVector(1, 7, &allocation_table);
-	printVReginPReg(1, &allocation_table);
-
+	printTablePReg(&allocation_table);
+	//inline void SafelyMoveToAnotherPREG(int preg, int reservedPregs[], int numberOfReserved, AllocationTable *table);	E_Add_MM(1, 2, 4, &allocation_table);
+	int reservedRegisters[] = {1,2,4,5,6,7,8,9,11};
+//	inline void SafelyMoveToAnotherPREG(int preg, int reservedPregs[], int numberOfReserved, AllocationTable *table);
+	SafelyMoveToAnotherPREG(0, reservedRegisters, 9, &allocation_table);
+	SafelyMoveToAnotherPREG(3, reservedRegisters, 9, &allocation_table);
+	printTablePReg(&allocation_table);
+	E_Mul_MM(1,2,4, &allocation_table);
+	printTableVReg(&allocation_table);
+	printTablePReg(&allocation_table);
+//	RowToColumn(8, 8, 0);
+//	ColumnToColumn(8,9,1);
+//	printVReginPReg(1, &allocation_table);
+//	printVReginPReg(2, &allocation_table);
+//	printVReginPReg(4, &allocation_table);
+	copyFromPRegsToVRegData(4, &allocation_table);
+	printVRegData(4, &allocation_table);
 	printRegFile(0,0,0,0,9);
     return 0;
 }

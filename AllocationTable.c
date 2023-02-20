@@ -137,7 +137,7 @@ void safeAllocatePRegs(int vRegNum, int maxDim, int protectedVReg[], int numProt
 	//todo-- add in ability to change according to orientation
 
 	//if a matrix
-	if(table->vreg[vRegNum].type==0){
+	if(table->vreg[vRegNum].type==0 && table->vreg[vRegNum].orientation==0){
 		int horizontalLay = ceil((float)table->vreg[vRegNum].cols/(float)maxDim); //maxdim = 4PE's * Tile_Dim * Array_Dim
 		int verticalLay = ceil((float)table->vreg[vRegNum].rows/(float)maxDim);
 		int numRegNeeded = horizontalLay*verticalLay; //todo: use ceil here
@@ -187,6 +187,60 @@ void safeAllocatePRegs(int vRegNum, int maxDim, int protectedVReg[], int numProt
 		//if the entire matrix is in SPAR, then update the status of the matrix
 		table->vreg[vRegNum].status = 1;
 	}
+	else if(table->vreg[vRegNum].type==0 && table->vreg[vRegNum].orientation==1){
+		int horizontalLay = ceil((float)table->vreg[vRegNum].cols/(float)maxDim); //maxdim = 4PE's * Tile_Dim * Array_Dim
+		int verticalLay = ceil((float)table->vreg[vRegNum].rows/(float)maxDim);
+		int numRegNeeded = horizontalLay*verticalLay; //todo: use ceil here
+
+		int pointerEnd = (table->nextRegToUpdate + Num_PREG)%Num_PREG; //indicates that it has looped through all of the physical registers
+		int i = 0;
+		//loop through until all registers are written or the pointer loops all the way through all possible physical registers
+		do
+		{
+			int oldReg = table->preg[table->nextRegToUpdate];
+			bool isProtected = 0;
+			for(int j = 0; j < numProtected; j++)
+			{
+				if(oldReg == protectedVReg[j]) {isProtected = true; break;}
+			}
+
+			if(!isProtected) //reallocate the preg if the virtual register is not protected
+			{
+				if(table->nextRegToUpdate==8){
+					printf("hitting 8 here\n");
+				}
+				if(oldReg>=0) {removeVRegFromPRegs(oldReg, table);} //remove VReg data from PRegs. Copy into memory. unassign all of the other PRegs
+				//assign the current virtual register to the physical register
+				table->preg[table->nextRegToUpdate] = vRegNum;
+
+				//update the placement in the virtual register
+				table->vreg[vRegNum].placement[i] = table->nextRegToUpdate;
+
+				//write the data segment to the register in SPAR
+				int startRow = (i/horizontalLay)*maxDim; //order of accessing registers should not change
+//					int startRow = (i%verticalLay)*maxDim;
+				int startCol = (i%horizontalLay)*maxDim;
+//					int startCol = (i/verticalLay)*maxDim;
+				int endRow = startRow+maxDim-1;
+				if(endRow > table->vreg[vRegNum].rows) {endRow = table->vreg[vRegNum].rows - 1;}
+				int endCol = startCol+maxDim-1;
+				if(endCol > table->vreg[vRegNum].cols) {endCol = table->vreg[vRegNum].cols - 1;}
+	//				printf("StartRow: %d, StartCol: %d, EndRow: %d, EndCol: %d\n", startRow, startCol, endRow, endCol);
+				loadVRegDataToPReg_M(vRegNum, table->nextRegToUpdate, startRow, startCol, endRow, endCol, table);
+
+				//increment the number registers that have been assigned
+				i++;
+			}
+			//update pointer
+			table->nextRegToUpdate++;
+			table->nextRegToUpdate %= Num_PREG;
+			table->vreg[vRegNum].placement[i] = -1; //mark the end of placement
+		} while ((i < numRegNeeded) && (table->nextRegToUpdate != pointerEnd));
+		//if the entire matrix is in SPAR, then update the status of the matrix
+		table->vreg[vRegNum].status = 1;
+	}
+
+
 	//vector in standard orientation 
 	else if(table->vreg[vRegNum].type==1 && table->vreg[vRegNum].orientation==0){
 		printf("safe allocating vector\n");
@@ -247,19 +301,18 @@ void safeAllocateEmptyPRegs(int vRegNum, int maxDim, int protectedVReg[], int nu
 	//todo-- add in ability to change according to orientation
 
 	//if a matrix
-	 if(table->vreg[vRegNum].type==0){
-		 int horizontalLay = ceil((float)table->vreg[vRegNum].cols/(float)maxDim); //maxdim = 4PE's * Tile_Dim * Array_Dim
-		 int verticalLay = ceil((float)table->vreg[vRegNum].rows/(float)maxDim);
-		 int numRegNeeded = horizontalLay*verticalLay; //todo: use ceil here
+	if(table->vreg[vRegNum].type==0 && table->vreg[vRegNum].orientation==0){
+		int horizontalLay = ceil((float)table->vreg[vRegNum].cols/(float)maxDim); //maxdim = 4PE's * Tile_Dim * Array_Dim
+		int verticalLay = ceil((float)table->vreg[vRegNum].rows/(float)maxDim);
+		int numRegNeeded = horizontalLay*verticalLay; //todo: use ceil here
 
-		 int pointerEnd = (table->nextRegToUpdate + Num_PREG)%Num_PREG; //indicates that it has looped through all of the physical registers
-		 int i = 0;
-		 //loop through until all registers are written or the pointer loops all the way through all possible physical registers
-		 do
-		 {
+		int pointerEnd = (table->nextRegToUpdate + Num_PREG)%Num_PREG; //indicates that it has looped through all of the physical registers
+		int i = 0;
+		//loop through until all registers are written or the pointer loops all the way through all possible physical registers
+		do
+		{
 			int oldReg = table->preg[table->nextRegToUpdate];
 			bool isProtected = 0;
-
 			for(int j = 0; j < numProtected; j++)
 			{
 				if(oldReg == protectedVReg[j]) {isProtected = true; break;}
@@ -270,10 +323,88 @@ void safeAllocateEmptyPRegs(int vRegNum, int maxDim, int protectedVReg[], int nu
 				if(table->nextRegToUpdate==8){
 					printf("hitting 8 here\n");
 				}
+				if(oldReg>=0) {removeVRegFromPRegs(oldReg, table);} //remove VReg data from PRegs. Copy into memory. unassign all of the other PRegs
+				//assign the current virtual register to the physical register
+				table->preg[table->nextRegToUpdate] = vRegNum;
 
-				if(oldReg!=-1) {removeVRegFromPRegs(oldReg, table);}
-				//todo: remove all other PReg allocations for old VREG and move data to memory
+				//update the placement in the virtual register
+				table->vreg[vRegNum].placement[i] = table->nextRegToUpdate;
+				//increment the number registers that have been assigned
+				i++;
+			}
+			//update pointer
+			table->nextRegToUpdate++;
+			table->nextRegToUpdate %= Num_PREG;
+			table->vreg[vRegNum].placement[i] = -1; //mark the end of placement
+		} while ((i < numRegNeeded) && (table->nextRegToUpdate != pointerEnd));
+		//if the entire matrix is in SPAR, then update the status of the matrix
+		table->vreg[vRegNum].status = 1;
+	}
+	else if(table->vreg[vRegNum].type==0 && table->vreg[vRegNum].orientation==1){
+		int horizontalLay = ceil((float)table->vreg[vRegNum].cols/(float)maxDim); //maxdim = 4PE's * Tile_Dim * Array_Dim
+		int verticalLay = ceil((float)table->vreg[vRegNum].rows/(float)maxDim);
+		int numRegNeeded = horizontalLay*verticalLay; //todo: use ceil here
 
+		int pointerEnd = (table->nextRegToUpdate + Num_PREG)%Num_PREG; //indicates that it has looped through all of the physical registers
+		int i = 0;
+		//loop through until all registers are written or the pointer loops all the way through all possible physical registers
+		do
+		{
+			int oldReg = table->preg[table->nextRegToUpdate];
+			bool isProtected = 0;
+			for(int j = 0; j < numProtected; j++)
+			{
+				if(oldReg == protectedVReg[j]) {isProtected = true; break;}
+			}
+
+			if(!isProtected) //reallocate the preg if the virtual register is not protected
+			{
+				if(table->nextRegToUpdate==16){
+					printf("hitting 16 here\n");
+				}
+				if(oldReg>=0) {removeVRegFromPRegs(oldReg, table);} //remove VReg data from PRegs. Copy into memory. unassign all of the other PRegs
+				//assign the current virtual register to the physical register
+				table->preg[table->nextRegToUpdate] = vRegNum;
+				printf("Assigned preg %d to Vreg %d!!!!\n", table->nextRegToUpdate, vRegNum);
+				//update the placement in the virtual register
+				table->vreg[vRegNum].placement[i] = table->nextRegToUpdate;
+				//increment the number registers that have been assigned
+				i++;
+			}
+			//update pointer
+			table->nextRegToUpdate++;
+			table->nextRegToUpdate %= Num_PREG;
+			table->vreg[vRegNum].placement[i] = -1; //mark the end of placement
+		} while ((i < numRegNeeded) && (table->nextRegToUpdate != pointerEnd));
+		//if the entire matrix is in SPAR, then update the status of the matrix
+		table->vreg[vRegNum].status = 1;
+	}
+
+
+	//vector in standard orientation
+	else if(table->vreg[vRegNum].type==1 && table->vreg[vRegNum].orientation==0){
+		printf("safe allocating vector\n");
+		int horizontalLay = ceil((float)table->vreg[vRegNum].cols/(float)maxDim); //assume the number of rows=number of copies is already
+		int verticalLay = ceil((float)table->vreg[vRegNum].rows/(float)maxDim);
+		int numRegNeeded = horizontalLay*verticalLay;
+		int pointerEnd = (table->nextRegToUpdate + Num_PREG)%Num_PREG;
+		int i = 0;
+		printf("hL: %d, vL: %d\n", horizontalLay, verticalLay);
+		do
+		{
+			int oldReg = table->preg[table->nextRegToUpdate];
+			bool isProtected = 0;
+			for(int j = 0; j < numProtected; j++)
+			{
+				if(oldReg == protectedVReg[j]) {isProtected = true; break;}
+			}
+
+			if(!isProtected) //reallocate the preg if the virtual register is not protected
+			{
+				if(table->nextRegToUpdate==8){
+					printf("hitting 8 here\n");
+				}
+				if(oldReg>=0) {removeVRegFromPRegs(oldReg, table);} //remove VReg data from PRegs. Copy into memory. unassign all of the other PRegs
 				//assign the current virtual register to the physical register
 				table->preg[table->nextRegToUpdate] = vRegNum;
 
@@ -287,6 +418,9 @@ void safeAllocateEmptyPRegs(int vRegNum, int maxDim, int protectedVReg[], int nu
 				if(endRow > table->vreg[vRegNum].rows) {endRow = table->vreg[vRegNum].rows - 1;}
 				int endCol = startCol+maxDim-1;
 				if(endCol > table->vreg[vRegNum].cols) {endCol = table->vreg[vRegNum].cols - 1;}
+	//				printf("StartRow: %d, StartCol: %d, EndRow: %d, EndCol: %d\n", startRow, startCol, endRow, endCol);
+//				loadVRegDataToPReg_V(vRegNum, table->nextRegToUpdate, startRow, endRow, table);
+
 				//increment the number registers that have been assigned
 				i++;
 			}
@@ -294,60 +428,12 @@ void safeAllocateEmptyPRegs(int vRegNum, int maxDim, int protectedVReg[], int nu
 			table->nextRegToUpdate++;
 			table->nextRegToUpdate %= Num_PREG;
 			table->vreg[vRegNum].placement[i] = -1; //mark the end of placement
-		 } while ((i < numRegNeeded) && (table->nextRegToUpdate != pointerEnd));
-		 //if the entire matrix is in SPAR, then update the status of the matrix
-		 table->vreg[vRegNum].status = 1;
-	 }
-	 else if(table->vreg[vRegNum].type==1 && table->vreg[vRegNum].orientation==0){
-	 		printf("safe allocating vector\n");
-	 		int horizontalLay = ceil((float)table->vreg[vRegNum].cols/(float)maxDim); //assume the number of rows=number of copies is already
-	 		int verticalLay = ceil((float)table->vreg[vRegNum].rows/(float)maxDim);
-	 		int numRegNeeded = horizontalLay*verticalLay;
-	 		int pointerEnd = (table->nextRegToUpdate + Num_PREG)%Num_PREG;
-	 		int i = 0;
-	 		do
-	 		{
-	 			int oldReg = table->preg[table->nextRegToUpdate];
-	 			bool isProtected = 0;
-	 			for(int j = 0; j < numProtected; j++)
-	 			{
-	 				if(oldReg == protectedVReg[j]) {isProtected = true; break;}
-	 			}
-
-	 			if(!isProtected) //reallocate the preg if the virtual register is not protected
-	 			{
-	 				if(table->nextRegToUpdate==8){
-	 					printf("hitting 8 here\n");
-	 				}
-	 				if(oldReg!=-1) {removeVRegFromPRegs(oldReg, table);} //remove VReg data from PRegs. Copy into memory. unassign all of the other PRegs
-	 				//assign the current virtual register to the physical register
-	 				table->preg[table->nextRegToUpdate] = vRegNum;
-
-	 				//update the placement in the virtual register
-	 				table->vreg[vRegNum].placement[i] = table->nextRegToUpdate;
-
-	 				//write the data segment to the register in SPAR
-	 				int startRow = (i/horizontalLay)*maxDim;
-	 				int startCol = (i%horizontalLay)*maxDim;
-	 				int endRow = startRow+maxDim-1;
-	 				if(endRow > table->vreg[vRegNum].rows) {endRow = table->vreg[vRegNum].rows - 1;}
-	 				int endCol = startCol+maxDim-1;
-	 				if(endCol > table->vreg[vRegNum].cols) {endCol = table->vreg[vRegNum].cols - 1;}
-	 	//				printf("StartRow: %d, StartCol: %d, EndRow: %d, EndCol: %d\n", startRow, startCol, endRow, endCol);
-//	 				loadVRegDataToPReg_V(vRegNum, table->nextRegToUpdate, startRow, endRow, table);
-
-	 				//increment the number registers that have been assigned
-	 				i++;
-	 			}
-	 			//update pointer
-	 			table->nextRegToUpdate++;
-	 			table->nextRegToUpdate %= Num_PREG;
-	 			table->vreg[vRegNum].placement[i] = -1; //mark the end of placement
-	 		} while ((i < numRegNeeded) && (table->nextRegToUpdate != pointerEnd));
-	 		//if the entire matrix is in SPAR, then update the status of the matrix
-	 		table->vreg[vRegNum].status = 1;
-	 	}
+		} while ((i < numRegNeeded) && (table->nextRegToUpdate != pointerEnd));
+		//if the entire matrix is in SPAR, then update the status of the matrix
+		table->vreg[vRegNum].status = 1;
+	}
 }
+
 
 void loadVRegDataToPReg_M(int vRegNum, int pRegNum, int startRow, int startCol, int endRow, int endCol, AllocationTable *table)
 {
@@ -369,13 +455,14 @@ void loadVRegDataToPReg_M(int vRegNum, int pRegNum, int startRow, int startCol, 
 		}
 	} else if(table->vreg[vRegNum].type==0 && table->vreg[vRegNum].orientation==1)
 	{
+
 		int s, t;
-		for(int i = startRow; i <= endRow; i++)
+		for(int i = startCol; i <= endCol; i++)
 		{
-			s = i-startRow;
-			for(int j = startCol; j <= endCol; j++)
+			s = i-startCol;
+			for(int j = startRow; j <= endRow; j++)
 			{
-				t = j-startCol;
+				t = j-startRow;
 				WRITE_REG((s/(4*Tile_dim))%Array_dim, (t/(4*Tile_dim))%Array_dim, (s/4)%Tile_dim, (t/4)%Tile_dim, ((s*4 +t)%4 + s*4)%16, pRegNum, table->vreg[vRegNum].data[i + j*(table->vreg[vRegNum].cols)]);
 			}
 		}
@@ -433,6 +520,39 @@ void copyFromPRegsToVRegData(int vRegNum, AllocationTable *table) 	//move data f
 				{
 					t = j-startCol;
 					data[j + i*(colOffset)] = READ_REG((s/(4*Tile_dim))%Array_dim, (t/(4*Tile_dim))%Array_dim, (s/4)%Tile_dim, (t/4)%Tile_dim, ((s*4 +t)%4 + s*4)%16, pRegNum);
+				}
+			}
+		}
+	}
+	else if(table->vreg[vRegNum].type==0 && table->vreg[vRegNum].orientation==1)
+	{
+		for(int placement=0; placement<6 && table->vreg[vRegNum].placement[placement] != -1; placement++){ //todo replace 6 with a variable
+			//todo change for each orientation
+			//todo account for the type in the vReg
+
+			//default orientation for matrix
+			if(table->vreg[vRegNum].type==0){
+				data = table->vreg[vRegNum].data;
+				colOffset = table->vreg[vRegNum].cols;
+			}
+
+//			printf("colOffset/24: %d\n", (int)ceil((float)colOffset/24));
+			int startRow = 24*(placement/horizontalLay); //todo: replace 24 with variables/macros
+			int endRow = startRow + 24;
+			if(endRow > table->vreg[vRegNum].rows) {endRow = table->vreg[vRegNum].rows;}
+			int startCol = 24*(placement%horizontalLay);
+			int endCol = startCol + 24;
+			if(endCol > table->vreg[vRegNum].cols) {endCol = table->vreg[vRegNum].cols;}
+			int pRegNum = table->vreg[vRegNum].placement[placement];
+//			printf("startRow: %d, endRow: %d, startCol: %d, endCol: %d, pRegNum: %d\n", startRow, endRow, startCol, endCol, pRegNum);
+			int s, t;
+			for(int i = startCol; i < endCol; i++)
+			{
+				s = i-startCol;
+				for(int j = startRow; j < endRow; j++)
+				{
+					t = j-startRow;
+					data[i + j*(colOffset)] = READ_REG((s/(4*Tile_dim))%Array_dim, (t/(4*Tile_dim))%Array_dim, (s/4)%Tile_dim, (t/4)%Tile_dim, ((s*4 +t)%4 + s*4)%16, pRegNum);
 				}
 			}
 		}
@@ -507,6 +627,7 @@ void printTableVReg(AllocationTable *table)
 		if(table->vreg[i].type==0) {printf("Matrix");}
 		else if(table->vreg[i].type==1) {printf("Vector");}
 		printf("\t");
+//		table->vreg[i].orientation = 100;
 		printf("orientation: %d,\n", table->vreg[i].orientation);
 	}
 }
@@ -538,7 +659,7 @@ void printVRegData(int reg, AllocationTable *table)
 				printf("%d, ", table->vreg[reg].data[j + i*(table->vreg[reg].cols)]);
 			}
 			printf("\n");
-			usleep_A53(5);
+			usleep_A53(500);
 		}
 	}
 	else if(table->vreg[reg].type==1)
@@ -565,23 +686,6 @@ void printVReginPReg(int reg, AllocationTable *table)
 	int* data;
 	int colOffset = 0;
 
-//	for(int i=0; i<table->vreg[reg].rows; i++)
-//	{
-//		for(int j=0; j<table->vreg[reg].cols; j++)
-//		{
-//			int pcount = (i/24)*horizontalLay + (j/24); //columns/maxdim
-////			printf("pcount: %d\n", pcount);
-//			int preg = table->vreg[reg].placement[pcount];
-//			int s = i%24;
-//			int t = j%24;
-//			int x = READ_REG((s/(4*Tile_dim))%Array_dim, (t/(4*Tile_dim))%Array_dim, (s/4)%Tile_dim, (t/4)%Tile_dim, ((s*4 +t)%4 + s*4)%16, preg);
-//			if(x==0)printf("x: %d, pcount: %d, preg: %d, i,j: %d,%d, s,t: %d,%d\n", x, pcount, preg, i, j, s, t);
-//			printf("%d, ", x);
-//		}
-//		printf("\n");
-//		usleep_A53(5);
-//	}
-
 	//copy the data into an array to print off
 	data = malloc(table->vreg[reg].cols*table->vreg[reg].rows*sizeof(int));
 	colOffset = table->vreg[reg].cols;
@@ -599,23 +703,56 @@ void printVReginPReg(int reg, AllocationTable *table)
 		int pRegNum = table->vreg[reg].placement[placement];
 		printf("startRow: %d, endRow: %d, startCol: %d, endCol: %d, pRegNum: %d\n", startRow, endRow, startCol, endCol, pRegNum);
 		int s, t;
-		for(int i = startRow; i < endRow; i++)
+		if(table->vreg[reg].orientation==0)
 		{
-			s = i-startRow;
-			for(int j = startCol; j < endCol; j++)
+			for(int i = startRow; i < endRow; i++)
 			{
-				t = j-startCol;
-				data[j + i*(colOffset)] = READ_REG((s/(4*Tile_dim))%Array_dim, (t/(4*Tile_dim))%Array_dim, (s/4)%Tile_dim, (t/4)%Tile_dim, ((s*4 +t)%4 + s*4)%16, pRegNum);
-//				printf("s,t: %d,%d  i,j: %d,%d  x: %d\n", s, t, i, j, data[j + i*colOffset]);
+				s = i-startRow;
+				for(int j = startCol; j < endCol; j++)
+				{
+					t = j-startCol;
+					data[j + i*(colOffset)] = READ_REG((s/(4*Tile_dim))%Array_dim, (t/(4*Tile_dim))%Array_dim, (s/4)%Tile_dim, (t/4)%Tile_dim, ((s*4 +t)%4 + s*4)%16, pRegNum);
+	//				printf("s,t: %d,%d  i,j: %d,%d  x: %d\n", s, t, i, j, data[j + i*colOffset]);
+				}
+			}
+		}
+		else
+		{
+			for(int i = startCol; i < endCol; i++)
+			{
+				s = i-startCol;
+				for(int j = startRow; j < endRow; j++)
+				{
+					t = j-startRow;
+					data[i + j*(table->vreg[reg].cols)] = READ_REG((s/(4*Tile_dim))%Array_dim, (t/(4*Tile_dim))%Array_dim, (s/4)%Tile_dim, (t/4)%Tile_dim, ((s*4 +t)%4 + s*4)%16, pRegNum);
+					//WRITE_REG((s/(4*Tile_dim))%Array_dim, (t/(4*Tile_dim))%Array_dim, (s/4)%Tile_dim, (t/4)%Tile_dim, ((s*4 +t)%4 + s*4)%16, pRegNum, table->vreg[vRegNum].data[j + i*(table->vreg[vRegNum].cols)]);
+	//				printf("s,t: %d,%d  i,j: %d,%d  x: %d\n", s, t, i, j, data[j + i*colOffset]);
+				}
 			}
 		}
 	}
-	for(int i = 0; i < table->vreg[reg].rows; i++)
+
+	if(table->vreg[reg].orientation==0)
 	{
-		for(int j=0; j < table->vreg[reg].cols; j++)
+		for(int i = 0; i < table->vreg[reg].rows; i++)
 		{
-			printf("%d, ", data[j + i*(table->vreg[reg].cols)]);
+			for(int j=0; j < table->vreg[reg].cols; j++)
+			{
+				printf("%d, ", data[j + i*(table->vreg[reg].cols)]);
+			}
+			printf("\n");
 		}
-		printf("\n");
+	}
+	else
+	{
+		printf("orientation = 1\n");
+		for(int i = 0; i < table->vreg[reg].cols; i++)
+		{
+			for(int j=0; j < table->vreg[reg].rows; j++)
+			{
+				printf("%d, ", data[i + j*(table->vreg[reg].cols)]);
+			}
+			printf("\n");
+		}
 	}
 }
