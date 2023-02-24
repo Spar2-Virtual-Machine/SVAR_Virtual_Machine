@@ -62,6 +62,7 @@
 #include "spar.h"
 #include "AllocationTable.h"
 #include "virt.h"
+#include "Test.h"
 
 #define MAX_LEN 32
 #define FIXED_POINT_FRACTIONAL_BITS 16
@@ -75,24 +76,8 @@
 #define epoch 1
 
 #define colN 41
-#define rowN 29
+#define rowN 40
 
-
-//Function prototypes
-int execute(int opcode, int rd, int rs1, int rs2);
-int readRAM(int address);
-int getbit(int n, int k);
-void getTranspose(int* ram, int* reg);
-void printArray(int* arr, int size);
-//void getData(int* arr, int address);
-unsigned char Test(int64_t* rd_reg, int64_t* rs1_reg, int64_t* rs2_reg, char operation);
-void WRITE(int Tile_i, int Tile_j, int BRAM_i, int BRAM_j, int ADDRA, int ADDRB, int DIA, int DIB);
-int READ(int Tile_i, int Tile_j, int BRAM_i, int BRAM_j, int ADDRA, int ADDRB);
-int printReg(int Tile_i, int Tile_j, int BRAM_i, int BRAM_j, int PE, int reg);
-int getTrans(int* ram);
-void printRegFile(int Tile_i, int Tile_j, int BRAM_i, int BRAM_j, int number_of_regs);
-void WRITE_REG(int Tile_i, int Tile_j, int BRAM_i, int BRAM_j, int PE, int reg, unsigned int data);
-unsigned int READ_REG(int Tile_i, int Tile_j, int BRAM_i, int BRAM_j, int PE, int reg);
 
 //Allocation Table for the VM
 static AllocationTable allocation_table;
@@ -139,57 +124,6 @@ int main()
 	printf("-------------------------------------------------------------------------\r\n");
 //	printRegFile(0, 0, 0, 0, 32);
 
-	int arr1[rowN][colN];
-//	xil_printf("arr1%p\n", arr1);
-	int arr2[rowN][colN];
-	int arr3[rowN][colN];
-	xil_printf("%p\n", allocation_table);
-	for(int i=0; i < rowN; i++)
-	{
-		for(int j=0; j < colN; j++)
-		{
-			arr1[i][j] = j+256;
-			arr2[i][j] = (1)<<16;
-			arr3[i][j] = (1)<<16;
-		}
-	}
-	xil_printf("here1\n");
-
-	//setup the matrix
-	Matrix m, n;
-	Declare_M(&m, rowN, colN);
-	m.memory = (int*)&arr1; //did not free memory, but I'm not being efficient here anyways
-	Declare_M(&n, rowN, colN);
-	n.memory = (int*)&arr2;
-
-	Store_M(&m, 1, &allocation_table);
-	Store_M(&n, 2, &allocation_table);
-	Store_M(&m, 3, &allocation_table);
-	allocation_table.vreg[1].orientation = 1;
-	allocation_table.vreg[2].orientation = 1;
-	allocation_table.vreg[3].orientation = 0;
-	safeAllocatePRegs(1, 24, NULL, 0, &allocation_table);
-	safeAllocatePRegs(2, 24, NULL, 0, &allocation_table);
-//	safeAllocatePRegs(3, 24, NULL, 0, &allocation_table);
-
-	printTableVReg(&allocation_table);
-	printTablePReg(&allocation_table);
-	//inline void SafelyMoveToAnotherPREG(int preg, int reservedPregs[], int numberOfReserved, AllocationTable *table);	E_Add_MM(1, 2, 4, &allocation_table);
-	int reservedRegisters[] = {1,2,4,5,6,7,8,9,11};
-//	inline void SafelyMoveToAnotherPREG(int preg, int reservedPregs[], int numberOfReserved, AllocationTable *table);
-	SafelyMoveToAnotherPREG(0, reservedRegisters, 9, &allocation_table);
-	SafelyMoveToAnotherPREG(3, reservedRegisters, 9, &allocation_table);
-	printTablePReg(&allocation_table);
-	E_Mul_MM(1,2,4, &allocation_table);
-	printTableVReg(&allocation_table);
-	printTablePReg(&allocation_table);
-//	RowToColumn(8, 8, 0);
-//	ColumnToColumn(8,9,1);
-//	printVReginPReg(1, &allocation_table);
-//	printVReginPReg(2, &allocation_table);
-//	printVReginPReg(4, &allocation_table);
-	copyFromPRegsToVRegData(4, &allocation_table);
-	printVRegData(4, &allocation_table);
-	printRegFile(0,0,0,0,9);
+	ConvertMatrixToVectorTest(&allocation_table);
     return 0;
 }
