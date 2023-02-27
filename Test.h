@@ -31,4 +31,6 @@ int TestFillVectorTurned(AllocationTable *table);
 int TestFillVectorMixedOrientation(AllocationTable *table);
 int ConvertMatrixToVectorTest(AllocationTable *table);
 int ConvertMatrixToVectorTurnedTest(AllocationTable *table);
+int MultiplyAccumulateMatrixVectorSetupTest(AllocationTable *table);
+int MultiplyAccumulateMatrixVectorTest(AllocationTable *table);
 #endif /* SRC_TEST_H_ */

@@ -124,6 +124,6 @@ int main()
 	printf("-------------------------------------------------------------------------\r\n");
 //	printRegFile(0, 0, 0, 0, 32);
 
-	ConvertMatrixToVectorTest(&allocation_table);
+	MultiplyAccumulateMatrixVectorSetupTest(&allocation_table);
     return 0;
 }

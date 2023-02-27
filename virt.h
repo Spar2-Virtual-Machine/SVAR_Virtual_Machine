@@ -7,7 +7,7 @@ void init_platform();
 void cleanup_platform();
 
 //hidden functions that the user should not call
-inline void SafelyMoveToAnotherPREG(int preg, int reservedPregs[], int numberOfReserved, AllocationTable *table);
+void SafelyMoveToAnotherPREG(int preg, int reservedPregs[], int numberOfReserved, AllocationTable *table);
 void MoveToAnotherPREG(int rs, int rd, AllocationTable *table);
 void EastLoopAround(int prs, int prd, AllocationTable *table);
 void WestLoopAround(int prs, int prd, AllocationTable *table);
@@ -18,6 +18,7 @@ void ShiftSouth_M(int rs, int rd, AllocationTable *table);
 void CopyVector(int rs, int tempr, int numberOfCopies, AllocationTable *table); //DEPRECATED. Not Necessary //copying vector for vector-matrix multiplication
 void FillVector(int rs, int tempr, AllocationTable *table); //copy vector except it wills up an entire preg of width. Needed for vector matrix multiplication
 void CastRegTo_V(int rs, int orientation, AllocationTable *table); //cast a matrix to vector
+void PrepareReg_Mul_MVM(int rsm, int rsv, int rd, AllocationTable *table);//prepares registers for
 
 //Primitive functions.
 void Declare_M(Matrix *m, int rows, int cols);
