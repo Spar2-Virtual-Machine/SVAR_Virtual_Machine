@@ -348,7 +348,8 @@ int toggleBit(int n, int k){
 }
 
 void WRITE_REG(int Tile_i, int Tile_j, int BRAM_i, int BRAM_j, int PE, int reg, unsigned int data){
-
+	static int sparWR_cnt = 0;
+	sparWR_cnt++;
 	int base = reg*32;
 	int i;
 	for( i=base-2; i>=base-33; i-=2){
@@ -374,7 +375,8 @@ void WRITE_REG(int Tile_i, int Tile_j, int BRAM_i, int BRAM_j, int PE, int reg, 
 }
 
 unsigned int READ_REG(int Tile_i, int Tile_j, int BRAM_i, int BRAM_j, int PE, int reg){
-
+	static int sparRD_cnt = 0;
+	sparRD_cnt++;
 	int base = reg*32;
 	unsigned int out;
 	for(int i=base-2; i>=base-33; i-=2){
@@ -489,6 +491,47 @@ void printRegFile(int Tile_i, int Tile_j, int BRAM_i, int BRAM_j, int number_of_
 
 int execute(int opcode, int rd, int rs1, int rs2)
 {
+	switch(opcode){
+	static int sparAdd_cnt = 0;
+	static int sparSub_cnt = 0;
+	static int sparMul_cnt = 0;
+	static int sparShN_cnt = 0;
+	static int sparShS_cnt = 0;
+	static int sparShE_cnt = 0;
+	static int sparShW_cnt = 0;
+		case 0:
+			sparAdd_cnt++;
+			break;
+		case 1:
+			sparSub_cnt++;
+			break;
+		case 2:
+			sparMul_cnt++;
+			break;
+		case 5:
+			sparShE_cnt++;
+			printf("SE\n");
+			break;
+		case 6:
+			sparShW_cnt++;
+			break;
+		case 7:
+			sparShS_cnt++;
+			break;
+		case 8:
+			sparShN_cnt++;
+			break;
+		case 300:
+			printf("Add Count: %d\n", sparAdd_cnt);
+			printf("Sub Count: %d\n", sparSub_cnt);
+			printf("Mul Count: %d\n", sparMul_cnt);
+			printf("Shift North Count: %d\n", sparShN_cnt);
+			printf("Shift South Count: %d\n", sparShS_cnt);
+			printf("Shift East Count: %d\n", sparShE_cnt);
+			printf("Shift West Count: %d\n", sparShW_cnt);
+			break;
+	};
+
 	int instruction = (opcode<<26) + (rd<<21) + (rs1 << 16) + (rs2 << 11);
 	BIT_SERIAL_mWriteReg(XPAR_BIT_SERIAL_0_S00_AXI_BASEADDR, BIT_SERIAL_S00_AXI_SLV_REG1_OFFSET, 0x00000000+LEN);//start = 0, reset = 0
 	BIT_SERIAL_mWriteReg(XPAR_BIT_SERIAL_0_S00_AXI_BASEADDR, BIT_SERIAL_S00_AXI_SLV_REG0_OFFSET, instruction);//instruction

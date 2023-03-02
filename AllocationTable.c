@@ -24,7 +24,7 @@ void inline resetVRegs(AllocationTable *table)
 	for(int i = 0; i<Num_VREG; i++)
 	{
 		(table->vreg[i].status)=-1;
-		xil_printf("vreg %d;\t%d\n", i, table->vreg[i].status);
+//		xil_printf("vreg %d;\t%d\n", i, table->vreg[i].status);
 		for(int j = 0; j<6; j++) //todo: change the 6 to a variable
 		{
 			table->vreg[i].placement[j] = -1;
@@ -36,21 +36,21 @@ void inline resetVRegs(AllocationTable *table)
 
 void inline resetTable(AllocationTable *table)
 {
-	xil_printf("%p\n", table);
+//	xil_printf("%p\n", table);
 
 
-	for(int i=0; i < Num_VREG; i++)
-	{
-		xil_printf("vreg %d;\t%p\n", i, table->vreg[i]);
-	}
+//	for(int i=0; i < Num_VREG; i++)
+//	{
+//		xil_printf("vreg %d;\t%p\n", i, table->vreg[i]);
+//	}
 	resetPRegs(table);
 	resetVRegs(table);
-	for(int i = 0; i<Num_VREG; i++)
-	{
-		xil_printf("vreg %d;\tstatus: %d;\taddress %p\n", i, table->vreg[i].status, &(table->vreg[i]));
-	}
+//	for(int i = 0; i<Num_VREG; i++)
+//	{
+//		xil_printf("vreg %d;\tstatus: %d;\taddress %p\n", i, table->vreg[i].status, &(table->vreg[i]));
+//	}
 	table->nextRegToUpdate = 0;
-	xil_printf("%p\n", table);
+//	xil_printf("%p\n", table);
 }
 
 void allocateVRegM(Matrix *m, int vRegNum, int orientation, AllocationTable *table)
@@ -871,4 +871,10 @@ void printVReginPReg(int reg, AllocationTable *table)
 			printf("\n");
 		}
 	}
+}
+
+inline void printVReg(int reg, AllocationTable *table)
+{
+	if(table->vreg[reg].status==0) {printVRegData(reg, table);}
+	else printVReginPReg(reg, table);
 }

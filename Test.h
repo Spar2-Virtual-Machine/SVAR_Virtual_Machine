@@ -26,6 +26,7 @@
 #include "AllocationTable.h"
 #include "virt.h"
 
+void MultiplyMV(int matrix[], int vector[], int rows, int cols, int result[]);
 int TestFillVector(AllocationTable *table);
 int TestFillVectorTurned(AllocationTable *table);
 int TestFillVectorMixedOrientation(AllocationTable *table);

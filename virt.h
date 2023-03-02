@@ -15,7 +15,7 @@ void SouthLoopAround(int prs, int prd, AllocationTable *table);
 void ShiftEast_M( int rs, int rd, AllocationTable *table);
 void ShiftWest_M(int rs, int rd, AllocationTable *table);
 void ShiftSouth_M(int rs, int rd, AllocationTable *table);
-void CopyVector(int rs, int tempr, int numberOfCopies, AllocationTable *table); //DEPRECATED. Not Necessary //copying vector for vector-matrix multiplication
+//void CopyVector(int rs, int tempr, int numberOfCopies, AllocationTable *table); //DEPRECATED. Not Necessary //copying vector for vector-matrix multiplication
 void FillVector(int rs, int tempr, AllocationTable *table); //copy vector except it wills up an entire preg of width. Needed for vector matrix multiplication
 void CastRegTo_V(int rs, int orientation, AllocationTable *table); //cast a matrix to vector
 void PrepareReg_Mul_MVM(int rsm, int rsv, int rd, AllocationTable *table);//prepares registers for
@@ -40,7 +40,7 @@ void E_Add_VV(int rs1, int rs2, int rd, AllocationTable *table);
 void E_Sub_VV(int rs1, int rs2, int rd, AllocationTable *table);
 void E_Mul_VV(int rs1, int rs2, int rd, AllocationTable *table);
 //compound
-void Accumulate_M(int rs, int rd, int tempReg, AllocationTable *table);
-void Mul_MV(int rs_m, int rs_v, int rd, AllocationTable *table);
+void AccumulateColumns_M(int rs, int rd, int tempReg, AllocationTable *table);
+void Mul_MV(int rs_m, int rs_v, int rd, int temp, AllocationTable *table);
 
 #endif

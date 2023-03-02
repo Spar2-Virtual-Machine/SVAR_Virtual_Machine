@@ -6,6 +6,25 @@
  */
 #include "Test.h"
 
+void MultiplyMV(int *matrix, int *vector, int rows, int cols, int *result) //todo: not working correctly
+{
+	int temp = 0;
+	for(int x=0; x<rows; x++)
+	{
+		temp = 0;
+		for(int y=0; y<cols; y++)
+		{
+			float mf = ((float)matrix[(x*cols) + y])/((float)(2<<16));
+			float vf = ((float)vector[y])/((float)(2<<16));
+			float tempf = mf*vf*(float)(2<<16);
+			temp += (int) tempf;
+//			temp += ((matrix[(x*cols) + y]) * vector[y]);
+		}
+		result[x] = temp;
+	}
+	return;
+}
+
 int TestFillVector(AllocationTable *table)
 {
 	srand(12890);
@@ -326,7 +345,7 @@ int MultiplyAccumulateMatrixVectorSetupTest(AllocationTable *table)
 		if(i%2==1){table->vreg[1].orientation=1;}
 		Store_V(&vector1, 2, table);
 		if(i%4==3){table->vreg[2].orientation=1;}
-		PrepareReg_Mul_MVM(1, 2, 3, table);//prepares registers for
+//		PrepareReg_Mul_MVM(1, 2, 3, table);//prepares registers for //todo: account for change
 
 		//randomly store ahead of time
 		if(i%8==7)safeAllocatePRegs(1, 24, NULL, 0, table);
@@ -375,17 +394,19 @@ int MultiplyAccumulateMatrixVectorTest(AllocationTable *table){
 
 	printf("-------------------------------------------------------------------------\r\n");
 	srand(12890);
-	int rowN = 30;
-	int colN = 40;
+	int rowN = 20;
+	int colN = 80;
 	int arr1[rowN][colN];
+	int arr2[rowN][colN];
 	for(int i=0; i < rowN; i++)
 	{
 		for(int j=0; j < colN; j++)
 		{
 			arr1[i][j] = j+256+(4*i);
-//			arr2[i][j] = (2)<<16;
+			arr2[i][j] = (2)<<16;
 		}
 	}
+	int testResult[rowN];
 	//declare and setup matrix and vector
 	Matrix matrix1;
 	Declare_M(&matrix1, rowN, colN);
@@ -393,9 +414,18 @@ int MultiplyAccumulateMatrixVectorTest(AllocationTable *table){
 	matrix1.memory=(int*)&arr1;
 	Vector vector1;
 	Declare_V(&vector1, colN); //needs to be column length
-	vector1.memory=(int*)&arr1;
+	vector1.memory=(int*)&arr2;
+	Store_M(&matrix1, 1, table);
+	Store_V(&vector1, 2, table);
 
-
+	Mul_MV(1, 2, 3, 0, table);
+	printVReg(0, table);
+	printf("\n");
+	printVReg(1, table);
+	printf("\n");
+	printVReg(2, table);
+	printf("\n");
+	printVReg(3, table);
 
 	return 0;
 }
