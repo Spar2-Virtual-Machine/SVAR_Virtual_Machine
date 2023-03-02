@@ -27,6 +27,8 @@
 #include "virt.h"
 
 void MultiplyMV(int matrix[], int vector[], int rows, int cols, int result[]);
+int TestShiftNorth(AllocationTable *table);
+int TestTurnedColumnAccumulation(AllocationTable *table);
 int TestFillVector(AllocationTable *table);
 int TestFillVectorTurned(AllocationTable *table);
 int TestFillVectorMixedOrientation(AllocationTable *table);

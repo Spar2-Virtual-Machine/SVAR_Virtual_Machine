@@ -15,6 +15,7 @@ void SouthLoopAround(int prs, int prd, AllocationTable *table);
 void ShiftEast_M( int rs, int rd, AllocationTable *table);
 void ShiftWest_M(int rs, int rd, AllocationTable *table);
 void ShiftSouth_M(int rs, int rd, AllocationTable *table);
+void ShiftNorth_M(int rs, int rd, AllocationTable *table);
 //void CopyVector(int rs, int tempr, int numberOfCopies, AllocationTable *table); //DEPRECATED. Not Necessary //copying vector for vector-matrix multiplication
 void FillVector(int rs, int tempr, AllocationTable *table); //copy vector except it wills up an entire preg of width. Needed for vector matrix multiplication
 void CastRegTo_V(int rs, int orientation, AllocationTable *table); //cast a matrix to vector

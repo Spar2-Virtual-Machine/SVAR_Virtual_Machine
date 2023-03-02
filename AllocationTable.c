@@ -25,7 +25,7 @@ void inline resetVRegs(AllocationTable *table)
 	{
 		(table->vreg[i].status)=-1;
 //		xil_printf("vreg %d;\t%d\n", i, table->vreg[i].status);
-		for(int j = 0; j<6; j++) //todo: change the 6 to a variable
+		for(int j = 0; j<Max_PrForVr; j++) //todo: change the 6 to a variable
 		{
 			table->vreg[i].placement[j] = -1;
 		}
@@ -494,8 +494,6 @@ void safeAllocateEmptyPRegs(int vRegNum, int maxDim, int protectedVReg[], int nu
 
 void loadVRegDataToPReg_M(int vRegNum, int pRegNum, int startRow, int startCol, int endRow, int endCol, AllocationTable *table)
 {
-	//todo --> add compatibility with vectors and scalars in the form of another if statement or function
-	//todo --> add ability to orient the way it should be
 	//////Matrices
 //	printf("Load: startRow: %d, endRow: %d, startCol: %d, endCol: %d, pRegNum: %d\n", startRow, endRow, startCol, endCol, pRegNum);
 	if(table->vreg[vRegNum].type==0 && table->vreg[vRegNum].orientation==0)
@@ -561,7 +559,7 @@ void copyFromPRegsToVRegData(int vRegNum, AllocationTable *table) 	//move data f
 	int colOffset = 0;
 	if(table->vreg[vRegNum].type==0 && table->vreg[vRegNum].orientation==0)
 	{
-		for(int placement=0; placement<6 && table->vreg[vRegNum].placement[placement] != -1; placement++){ //todo replace 6 with a variable
+		for(int placement=0; placement<Max_PrForVr && table->vreg[vRegNum].placement[placement] != -1; placement++){ //todo replace 6 with a variable
 			//todo change for each orientation
 			//todo account for the type in the vReg
 
@@ -597,7 +595,7 @@ void copyFromPRegsToVRegData(int vRegNum, AllocationTable *table) 	//move data f
 	}
 	else if(table->vreg[vRegNum].type==0 && table->vreg[vRegNum].orientation==1) //matrix in turned orientation
 	{
-		for(int placement=0; placement<6 && table->vreg[vRegNum].placement[placement] != -1; placement++){ //todo replace 6 with a variable
+		for(int placement=0; placement<Max_PrForVr && table->vreg[vRegNum].placement[placement] != -1; placement++){ //todo replace 6 with a variable
 			//todo change for each orientation
 			//todo account for the type in the vReg
 
@@ -633,7 +631,7 @@ void copyFromPRegsToVRegData(int vRegNum, AllocationTable *table) 	//move data f
 	{
 		//default orientation for vector
 		printf("Copying vector vreg %d\n", vRegNum);
-		for(int placement=0; placement<6 && table->vreg[vRegNum].placement[placement] != -1; placement+=horizontalLay){ //todo replace 6 with a variable
+		for(int placement=0; placement<Max_PrForVr && table->vreg[vRegNum].placement[placement] != -1; placement+=horizontalLay){ //todo replace 6 with a variable
 			if(table->vreg[vRegNum].type==0){
 				colOffset = table->vreg[vRegNum].cols;
 			}
@@ -653,7 +651,7 @@ void copyFromPRegsToVRegData(int vRegNum, AllocationTable *table) 	//move data f
 	else if(table->vreg[vRegNum].type==1 && table->vreg[vRegNum].orientation==1) //vector in turned orientation
 	{
 		printf("Copying vector vreg %d in turned orientation\n", vRegNum);
-		for(int placement=0; placement<6 && table->vreg[vRegNum].placement[placement] != -1; placement+=horizontalLay){ //todo replace 6 with a variable
+		for(int placement=0; placement<Max_PrForVr && table->vreg[vRegNum].placement[placement] != -1; placement+=horizontalLay){ //todo replace 6 with a variable
 			if(table->vreg[vRegNum].type==0){
 				colOffset = table->vreg[vRegNum].cols;
 			}

@@ -12,7 +12,7 @@
 
 #define Num_VREG 8
 #define Num_PREG 16
-#define Max_Num_PREG_Per_VREG 6
+#define Max_PrForVr 6 //Num_PREG/3
 #define VREG_Data_Size 3200 //arbitrarily chosen for now
 
 typedef struct Matrix{
@@ -36,7 +36,7 @@ typedef struct VReg{
 	int orientation; //0=regular 1=transpose. Need to know orientation before multiplication and other operations. -1 if just in memory (not spar)
 
 	int type; //0 means matrix. 1 means vector. 2 means scalar
-	int placement[Max_Num_PREG_Per_VREG]; //an array that keeps track of the different parts of a matrix. //placement should only be touched inside of the allocation table functions
+	int placement[Max_PrForVr]; //an array that keeps track of the different parts of a matrix. //placement should only be touched inside of the allocation table functions
 	int status; //more general placement of the data. -1 = empty. 0 means in memory. 1 means in SPAR. 2 means in spar not matching memory. 3 invalid in spar.  5 Means the data is set in m but not in the VReg data
 }VReg;
 

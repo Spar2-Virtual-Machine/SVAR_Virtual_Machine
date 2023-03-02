@@ -101,7 +101,7 @@ void MoveToAnotherPREG(int rs, int rd, AllocationTable *table){
 			}
 		}
 	}
-	for(int i=0; i<6; i++) //todo: replace 6 with a variable
+	for(int i=0; i<Max_PrForVr; i++) //todo: replace 6 with a variable
 	{
 		if(table->vreg[vreg].placement[i] == rs)
 		{
@@ -544,9 +544,18 @@ void ShiftSouth_M(int rs, int rd, AllocationTable *table){
 	table->vreg[rd].orientation = table->vreg[rs].orientation;
 	table->vreg[rd].type = table->vreg[rs].type;
 	//todo: see if there is a better way to calculate the num of row and column segments
-	int colFol = ceil((float)table->vreg[rs].cols/(float)SPAR_dimension); //calculate the number of column segments
-	int rowFol = ceil((float)table->vreg[rs].rows/(float)SPAR_dimension);
-
+	int colFol; //calculate the number of column segments
+	int rowFol;
+	if(table->vreg[rs].orientation==0)
+	{
+		colFol = ceil((float)table->vreg[rs].cols/(float)SPAR_dimension);
+		rowFol = ceil((float)table->vreg[rs].rows/(float)SPAR_dimension);
+	}
+	else
+	{
+		colFol = ceil((float)table->vreg[rs].rows/(float)SPAR_dimension);
+		rowFol = ceil((float)table->vreg[rs].cols/(float)SPAR_dimension);
+	}
 	//make sure that the registers are in the SPAR
 	PrepareRegMM(rs, rd, table);
 
@@ -567,6 +576,58 @@ void ShiftSouth_M(int rs, int rd, AllocationTable *table){
 }
 
 
+void NorthLoopAround(int prs, int prd, AllocationTable *table){
+	for(int a = 0; a < Array_dim; a++)
+	{
+		for (int b = 0; b < Tile_dim; b++)
+		{
+			for(int j = 0; j < 4; j+=1)
+			{
+				int x = READ_REG(0, a, 0, b, j, prs);//last 4 pes
+				WRITE_REG(Array_dim-1, a, Tile_dim-1, b, j+12, prd, x);//first 4 pes
+			}
+		}
+	}
+}
+
+void ShiftNorth_M(int rs, int rd, AllocationTable *table){
+	table->vreg[rd].cols=table->vreg[rs].cols;
+	table->vreg[rd].rows=table->vreg[rs].rows;
+	table->vreg[rd].orientation = table->vreg[rs].orientation;
+	table->vreg[rd].type = table->vreg[rs].type;
+	//todo: see if there is a better way to calculate the num of row and column segments
+	int colFol; //calculate the number of column segments
+	int rowFol;
+	if(table->vreg[rs].orientation==0)
+	{
+		colFol = ceil((float)table->vreg[rs].cols/(float)SPAR_dimension);
+		rowFol = ceil((float)table->vreg[rs].rows/(float)SPAR_dimension);
+	}
+	else
+	{
+		colFol = ceil((float)table->vreg[rs].rows/(float)SPAR_dimension);
+		rowFol = ceil((float)table->vreg[rs].cols/(float)SPAR_dimension);
+	}
+
+	//make sure that the registers are in the SPAR
+	PrepareRegMM(rs, rd, table);
+
+	int i = 0;
+	for(int s=0; s<rowFol; s++)
+	{
+		for(int t=0; t<colFol; t++)
+		{
+			i = t+(s*colFol);
+			execute(8, table->vreg[rd].placement[i], table->vreg[rs].placement[i], 0);
+			if(s != 0)
+			{
+				printf("About to north loop aroud; \t prs: %d; prd: %d;\n", table->vreg[rs].placement[i], table->vreg[rd].placement[i-colFol]);
+				NorthLoopAround(table->vreg[rs].placement[i], table->vreg[rd].placement[i-colFol], table);
+			}
+		}
+	}
+}
+
 void FillVector(int rs, int tempr, AllocationTable *table){ //copy vector except it wills up an entire preg of width. Needed for vector matrix multiplication
 	//todo: remove unneccessary vector preg's if the width > 1 preg
 	table->vreg[rs].cols = SPAR_dimension;
@@ -581,7 +642,7 @@ void FillVector(int rs, int tempr, AllocationTable *table){ //copy vector except
 //		printTableVReg(table);
 //		printTablePReg(table);
 		//clear all but first row of the source
-		for(int i=0; i<6; i++)
+		for(int i=0; i<Max_PrForVr; i++)
 		{
 			//shift West into temp
 			execute(6, table->vreg[tempr].placement[i], table->vreg[rs].placement[i], 0);
@@ -604,7 +665,7 @@ void FillVector(int rs, int tempr, AllocationTable *table){ //copy vector except
 		//todo: make sure the vector is in SPAR and has enough registers for copying
 		PrepareRegMM(rs, tempr, table);
 		//clear all but first row of the source
-		for(int i=0; i<6; i++)
+		for(int i=0; i<Max_PrForVr; i++)
 		{
 			//shift north into temp
 			execute(8, table->vreg[tempr].placement[i], table->vreg[rs].placement[i], 0);
@@ -616,7 +677,7 @@ void FillVector(int rs, int tempr, AllocationTable *table){ //copy vector except
 		//clear temp reg
 		E_Sub_MM(rs, rs, tempr, table);
 //		ShiftSouth_M(rs, tempr, table); //copy vector into the temp register
-		for(int i=0; i<6; i++)
+		for(int i=0; i<Max_PrForVr; i++)
 		{
 			execute(7, table->vreg[tempr].placement[i], table->vreg[rs].placement[i], 0); //does not work entirely correct.
 		}
@@ -624,7 +685,7 @@ void FillVector(int rs, int tempr, AllocationTable *table){ //copy vector except
 		{
 			E_Add_MM(tempr, rs, rs, table);
 //			ShiftSouth_M(tempr, tempr, table);
-			for(int i=0; i<6; i++)
+			for(int i=0; i<Max_PrForVr; i++)
 			{
 				execute(7, table->vreg[tempr].placement[i], table->vreg[tempr].placement[i], 0); //does not work entirely correct.
 			}
@@ -652,17 +713,17 @@ void CastRegTo_V(int rs, int orientation, AllocationTable *table) { //orientatio
 		{
 			//remove all but the first reg of columns
 			int horizontalLay = ceil((float)table->vreg[rs].cols/(float)24); //how many regs are used for copying vector
-			int newPlacements[6] = {-1};
+			int newPlacements[Max_PrForVr] = {-1};
 			int count = 0;
-			for(int i=0; i<6; i+=horizontalLay)//todo: replace 6 with macro or variable.
+			for(int i=0; i<Max_PrForVr; i+=horizontalLay)//todo: replace 6 with macro or variable.
 			{
 				newPlacements[i/horizontalLay] = table->vreg[rs].placement[i];
 				count++;
 			}
-			for(int i=0; i<6 && i<count; i++)
+			for(int i=0; i<Max_PrForVr && i<count; i++)
 			{
 				table->vreg[rs].placement[i] = newPlacements[i];
-				if(i+1 < 6) table->vreg[rs].placement[i+1] = -1;
+				if(i+1 < Max_PrForVr) table->vreg[rs].placement[i+1] = -1;
 			}
 			table->vreg[rs].type = 1;
 			table->vreg[rs].cols = 1;
@@ -680,17 +741,17 @@ void CastRegTo_V(int rs, int orientation, AllocationTable *table) { //orientatio
 		{
 			//remove all but the first reg of rows
 			int horizontalLay = ceil((float)table->vreg[rs].cols/(float)24); //how many regs are used for copying vector
-			int newPlacements[6] = {-1};
+			int newPlacements[Max_PrForVr] = {-1};
 			int count = 0;
-			for(int i=0; i<horizontalLay && i<6; i+=1)//todo: replace 6 with macro or variable. and make it more efficient
+			for(int i=0; i<horizontalLay && i<Max_PrForVr; i+=1)//todo: replace 6 with macro or variable. and make it more efficient
 			{
 				newPlacements[i] = table->vreg[rs].placement[i];
 				count++;
 			}
-			for(int i=0; i<6 && i<count; i++)
+			for(int i=0; i<Max_PrForVr && i<count; i++)
 			{
 				table->vreg[rs].placement[i] = newPlacements[i];
-				if(i+1 < 6) table->vreg[rs].placement[i+1] = -1;
+				if(i+1 < Max_PrForVr) table->vreg[rs].placement[i+1] = -1;
 			}
 			table->vreg[rs].rows = table->vreg[rs].cols;
 			table->vreg[rs].type = 1;
@@ -794,7 +855,7 @@ void E_Add_MM(int rs1, int rs2, int rd, AllocationTable *table){
 //	table->vreg[rd].orientation = table->vreg[rs1].orientation;
 //	table->vreg[rd].type = table->vreg[rs1].type;
 	PrepareReg_E_MMM(rs1, rs2, rd, table);
-	for(int i = 0; i < 6; i++){//todo: replace 6 with a variable or macro
+	for(int i = 0; i < Max_PrForVr; i++){//todo: replace 6 with a variable or macro
 //		printf("i: %d, rd: %d, rs1: %d, rs2: %d\n", i, table->vreg[rd].placement[i], table->vreg[rs1].placement[i], table->vreg[rs2].placement[i]);
 //		printf("rs1: %d, rs2: %d, rd: %d\n", table->vreg[rs1].placement[i], table->vreg[rs2].placement[i], table->vreg[rd].placement[i]);
 
@@ -807,7 +868,7 @@ void E_Sub_MM(int rs1, int rs2, int rd, AllocationTable *table)
 {
 	//set result up
 	PrepareReg_E_MMM(rs1, rs2, rd, table);
-	for(int i = 0; i < 6; i++){//todo: replace 6 with a variable or macro
+	for(int i = 0; i < Max_PrForVr; i++){//todo: replace 6 with a variable or macro
 		if(table->vreg[rd].placement[i]>=0 && table->vreg[rs1].placement[i]>=0 && table->vreg[rs2].placement[i]>=0) execute(1, table->vreg[rd].placement[i], table->vreg[rs1].placement[i], table->vreg[rs2].placement[i]);
 		else break; //break out of loop if one of the placements is -1
 	}
@@ -818,9 +879,9 @@ void E_Mul_MM(int rs1, int rs2, int rd, AllocationTable *table)
 	//set result up
 	PrepareReg_E_MMM(rs1, rs2, rd, table);
 	//todo: make the placements execute in order of lowest number PE to highest in order to avoid messing up other rd pregs.
-	int placementCopy[6];
-	int indices[6];
-	for(int i = 0; i<6; i++)
+	int placementCopy[Max_PrForVr];
+	int indices[Max_PrForVr];
+	for(int i = 0; i<Max_PrForVr; i++)
 	{
 		placementCopy[i]=table->vreg[rd].placement[i];
 		indices[i]=i;
@@ -828,7 +889,7 @@ void E_Mul_MM(int rs1, int rs2, int rd, AllocationTable *table)
 
 	quicksortModified(placementCopy, 0, 5, indices);
 
-	for(int j=0; j<6; j++)
+	for(int j=0; j<Max_PrForVr; j++)
 	{
 		int i = indices[j];
 		if(table->vreg[rd].placement[i]>=0 && table->vreg[rs1].placement[i]>=0 && table->vreg[rs2].placement[i]>=0)
@@ -838,9 +899,9 @@ void E_Mul_MM(int rs1, int rs2, int rd, AllocationTable *table)
 			if(table->preg[table->vreg[rd].placement[i]+1]!=rd && table->preg[table->vreg[rd].placement[i]+1]>=0 && table->vreg[rd].placement[i]<Num_PREG-1) //account for register above the destination register being changed. Does not matter if the register is the last
 			{
 				if(table->preg[table->vreg[rd].placement[i]+1] == rs1) { //safely move a source register preg
-					int reserved[12]; //todo: replace reserved size to a variable or macro
+					int reserved[Max_PrForVr*2]; //todo: replace reserved size to a variable or macro
 					int reservedCount = 0;
-					for(int plac = 0; plac < 6; plac++)
+					for(int plac = 0; plac < Max_PrForVr; plac++)
 					{
 						if(table->vreg[rd].placement[plac] >=0) {reserved[reservedCount] = table->vreg[rd].placement[plac]; reservedCount++;}
 						if(table->vreg[rs2].placement[plac] >=0) {reserved[reservedCount] = table->vreg[rs2].placement[plac]; reservedCount++;}
@@ -849,9 +910,9 @@ void E_Mul_MM(int rs1, int rs2, int rd, AllocationTable *table)
 					SafelyMoveToAnotherPREG(table->vreg[rd].placement[i]+1, reserved, reservedCount, table);
 				}
 				else if(table->preg[table->vreg[rd].placement[i]+1] == rs2) { //safely move a source register preg
-					int reserved[12]; //todo: replace reserved size to a variable or macro
+					int reserved[Max_PrForVr*2]; //todo: replace reserved size to a variable or macro
 					int reservedCount = 0;
-					for(int plac = 0; plac < 6; plac++)
+					for(int plac = 0; plac < Max_PrForVr; plac++)
 					{
 						if(table->vreg[rd].placement[plac] >=0) {reserved[reservedCount] = table->vreg[rd].placement[plac]; reservedCount++;}
 						if(table->vreg[rs1].placement[plac] >=0) {reserved[reservedCount] = table->vreg[rs1].placement[plac]; reservedCount++;}
@@ -870,22 +931,36 @@ void E_Mul_MM(int rs1, int rs2, int rd, AllocationTable *table)
 	}
 }
 
-void AccumulateColumns_M(int rs, int rd, int tempReg, AllocationTable *table)
+void AccumulateColumns_M(int rs, int rd, int tempReg, AllocationTable *table) //todo: can be GREATLY optimized similarly to Atiyeh's design
 {
 	//clear tempReg and destination register. This also sets the tempReg and rd dimensions
 	E_Sub_MM(rs, rs, tempReg, table);
 	E_Sub_MM(rs, rs, rd, table);
 
-	//move data initially into tempReg
-	ShiftWest_M(rs, tempReg, table);
-	//add
-	E_Add_MM(tempReg, rs, rd, table);
-	for(int i = 0; i < (table->vreg[rs].cols)-1; i++)
+	if(table->vreg[rs].orientation == 0)
 	{
-		ShiftWest_M(rd, tempReg, table);
+		//move data initially into tempReg
+		ShiftWest_M(rs, tempReg, table);
+		//add
 		E_Add_MM(tempReg, rs, rd, table);
+		for(int i = 0; i < (table->vreg[rs].cols)-1; i++)
+		{
+			ShiftWest_M(rd, tempReg, table);
+			E_Add_MM(tempReg, rs, rd, table);
+		}
 	}
-	//cast result to vector
+	else
+	{
+		printf("accumulating turned\n");
+		ShiftNorth_M(rs, tempReg, table);
+		E_Add_MM(tempReg, rs, rd, table);
+		for(int i = 0; i < (table->vreg[rs].cols)-1; i++)
+		{
+			printVReg(tempReg, table);
+			ShiftNorth_M(rd, tempReg, table);
+			E_Add_MM(tempReg, rs, rd, table);
+		}
+	}
 }
 
 void E_Add_VV(int rs1, int rs2, int rd, AllocationTable *table){
@@ -895,7 +970,7 @@ void E_Add_VV(int rs1, int rs2, int rd, AllocationTable *table){
 //	table->vreg[rd].orientation = table->vreg[rs1].orientation;
 //	table->vreg[rd].type = 1;
 	PrepareReg_E_VVV(rs1, rs2, rd, table);
-	for(int i=0; i<6; i++)
+	for(int i=0; i<Max_PrForVr; i++)
 	{
 		if(table->vreg[rd].placement[i]>=0 && table->vreg[rs1].placement[i]>=0 && table->vreg[rs2].placement[i]>=0) execute(0, table->vreg[rd].placement[i], table->vreg[rs1].placement[i], table->vreg[rs2].placement[i]);
 		else break;
@@ -909,7 +984,7 @@ void E_Sub_VV(int rs1, int rs2, int rd, AllocationTable *table){
 //	table->vreg[rd].orientation = table->vreg[rs1].orientation;
 //	table->vreg[rd].type = 1;
 	PrepareReg_E_MMM(rs1, rs2, rd, table);
-	for(int i=0; i<6; i++)
+	for(int i=0; i<Max_PrForVr; i++)
 	{
 		if(table->vreg[rd].placement[i]>=0 && table->vreg[rs1].placement[i]>=0 && table->vreg[rs2].placement[i]>=0) execute(1, table->vreg[rd].placement[i], table->vreg[rs1].placement[i], table->vreg[rs2].placement[i]);
 		else break;
@@ -926,9 +1001,9 @@ void E_Mul_VV(int rs1, int rs2, int rd, AllocationTable *table){
 	PrepareReg_E_MMM(rs1, rs2, rd, table);
 //	printTablePReg(table);
 
-	int placementCopy[6];
-	int indices[6];
-	for(int i = 0; i<6; i++)
+	int placementCopy[Max_PrForVr];
+	int indices[Max_PrForVr];
+	for(int i = 0; i<Max_PrForVr; i++)
 	{
 		placementCopy[i]=table->vreg[rd].placement[i];
 		indices[i]=i;
@@ -936,19 +1011,44 @@ void E_Mul_VV(int rs1, int rs2, int rd, AllocationTable *table){
 
 	quicksortModified(placementCopy, 0, 5, indices);
 
-	for(int j=0; j<6; j++)
+	for(int j=0; j<Max_PrForVr; j++)
 	{
 		int i = indices[j];
-//		printf("%d\n", i);
 		if(table->vreg[rd].placement[i]>=0 && table->vreg[rs1].placement[i]>=0 && table->vreg[rs2].placement[i]>=0)
 		{
-			if(table->preg[table->vreg[rd].placement[i]+1]!=rd && table->preg[table->vreg[rd].placement[i]+1]>=0) //account for register above the destination register being changed.
+//			printTablePReg(table);
+			printf("here %d\n", table->vreg[rd].placement[i]+1);
+			if(table->preg[table->vreg[rd].placement[i]+1]!=rd && table->preg[table->vreg[rd].placement[i]+1]>=0 && table->vreg[rd].placement[i]<Num_PREG-1) //account for register above the destination register being changed. Does not matter if the register is the last
 			{
-				printf("removing vreg from preg: %d\n", table->preg[table->vreg[rd].placement[i]+1]);
-				removeVRegFromPRegs(table->preg[table->vreg[rd].placement[i]+1], table);
+				if(table->preg[table->vreg[rd].placement[i]+1] == rs1) { //safely move a source register preg
+					int reserved[Max_PrForVr*2]; //todo: replace reserved size to a variable or macro
+					int reservedCount = 0;
+					for(int plac = 0; plac < Max_PrForVr; plac++)
+					{
+						if(table->vreg[rd].placement[plac] >=0) {reserved[reservedCount] = table->vreg[rd].placement[plac]; reservedCount++;}
+						if(table->vreg[rs2].placement[plac] >=0) {reserved[reservedCount] = table->vreg[rs2].placement[plac]; reservedCount++;}
+					}
+//					printf("moving preg %d for vreg %d\n", table->vreg[rd].placement[i]+1, rs1);
+					SafelyMoveToAnotherPREG(table->vreg[rd].placement[i]+1, reserved, reservedCount, table);
+				}
+				else if(table->preg[table->vreg[rd].placement[i]+1] == rs2) { //safely move a source register preg
+					int reserved[Max_PrForVr*2]; //todo: replace reserved size to a variable or macro
+					int reservedCount = 0;
+					for(int plac = 0; plac < Max_PrForVr; plac++)
+					{
+						if(table->vreg[rd].placement[plac] >=0) {reserved[reservedCount] = table->vreg[rd].placement[plac]; reservedCount++;}
+						if(table->vreg[rs1].placement[plac] >=0) {reserved[reservedCount] = table->vreg[rs1].placement[plac]; reservedCount++;}
+					}
+//					printf("moving preg %d for vreg %d\n", table->vreg[rd].placement[i]+1, rs2);
+					SafelyMoveToAnotherPREG(table->vreg[rd].placement[i]+1, reserved, reservedCount, table);
+				}
+				else {
+//					printf("removing vreg from preg: %d", table->preg[table->vreg[rd].placement[i]+1]);
+					removeVRegFromPRegs(table->preg[table->vreg[rd].placement[i]+1], table);
+				}
 			}
-			printf("Multiplying %d x %d = %d\n",  table->vreg[rs1].placement[i], table->vreg[rs2].placement[i], table->vreg[rd].placement[i]);
 			execute(2, table->vreg[rd].placement[i], table->vreg[rs1].placement[i], table->vreg[rs2].placement[i]);
+			usleep_A53(500);
 		}
 	}
 }
@@ -960,10 +1060,10 @@ void Mul_MV(int rs_m, int rs_v, int rd, int temp, AllocationTable *table){
 	printf("temp status: %d, orientation: %d\n", table->vreg[temp].status, table->vreg[temp].orientation);
 
 	//organize the order of multiplication
-	int placementCopy[6]; //todo: replace 6 with macro or variable
-	int indices[6];
+	int placementCopy[Max_PrForVr]; //todo: replace 6 with macro or variable
+	int indices[Max_PrForVr];
 	int rs_v_preg_count = 0;
-	for(int i = 0; i<6; i++)
+	for(int i = 0; i<Max_PrForVr; i++)
 	{
 		placementCopy[i]=table->vreg[temp].placement[i];
 		indices[i]=i;
@@ -973,7 +1073,7 @@ void Mul_MV(int rs_m, int rs_v, int rd, int temp, AllocationTable *table){
 
 	quicksortModified(placementCopy, 0, 5, indices);
 
-	for(int j=0; j<6; j++)
+	for(int j=0; j<Max_PrForVr; j++)
 	{
 		int i = indices[j];
 		if(table->vreg[temp].placement[i]>=0 && table->vreg[rs_m].placement[i]>=0 && (table->vreg[rs_v].placement[i%rs_v_preg_count])>=0)
@@ -983,9 +1083,9 @@ void Mul_MV(int rs_m, int rs_v, int rd, int temp, AllocationTable *table){
 			if(table->preg[table->vreg[temp].placement[i]+1]!=temp && table->preg[table->vreg[temp].placement[i]+1]>=0 && table->vreg[temp].placement[i]<Num_PREG-1) //account for register above the destination register being changed. Does not matter if the register is the last
 			{
 				if(table->preg[table->vreg[temp].placement[i]+1] == rs_m) { //safely move a source register preg
-					int reserved[12]; //todo: replace reserved size to a variable or macro
+					int reserved[Max_PrForVr*2]; //todo: replace reserved size to a variable or macro
 					int reservedCount = 0;
-					for(int plac = 0; plac < 6; plac++)
+					for(int plac = 0; plac < Max_PrForVr; plac++)
 					{
 						if(table->vreg[temp].placement[plac] >=0) {reserved[reservedCount] = table->vreg[temp].placement[plac]; reservedCount++;}
 						if(table->vreg[rs_v].placement[plac] >=0) {reserved[reservedCount] = table->vreg[rs_v].placement[plac]; reservedCount++;}
@@ -994,9 +1094,9 @@ void Mul_MV(int rs_m, int rs_v, int rd, int temp, AllocationTable *table){
 					SafelyMoveToAnotherPREG(table->vreg[temp].placement[i]+1, reserved, reservedCount, table);
 				}
 				else if(table->preg[table->vreg[temp].placement[i]+1] == rs_v) { //safely move a source register preg
-					int reserved[12]; //todo: replace reserved size to a variable or macro
+					int reserved[Max_PrForVr*2]; //todo: replace reserved size to a variable or macro
 					int reservedCount = 0;
-					for(int plac = 0; plac < 6; plac++)
+					for(int plac = 0; plac < Max_PrForVr; plac++)
 					{
 						if(table->vreg[temp].placement[plac] >=0) {reserved[reservedCount] = table->vreg[temp].placement[plac]; reservedCount++;}
 						if(table->vreg[rs_m].placement[plac] >=0) {reserved[reservedCount] = table->vreg[rs_m].placement[plac]; reservedCount++;}
