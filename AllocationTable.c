@@ -792,7 +792,7 @@ void printVRegData(int reg, AllocationTable *table)
 void printVReginPReg(int reg, AllocationTable *table)
 {
 	printf("VReg %d being printed\n", reg);
-	for(int i=0; i<6; i++) //todo: replace 6 with macro or variable
+	for(int i=0; i<Max_PrForVr; i++) //todo: replace 6 with macro or variable
 	{
 		printf("%d, ", table->vreg[reg].placement[i]);
 	}
@@ -806,7 +806,7 @@ void printVReginPReg(int reg, AllocationTable *table)
 	//copy the data into an array to print off
 	data = malloc(table->vreg[reg].cols*table->vreg[reg].rows*sizeof(int));
 	colOffset = table->vreg[reg].cols;
-	for(int placement=0; placement<6 && table->vreg[reg].placement[placement] != -1; placement++){ //todo replace 6 with a variable
+	for(int placement=0; placement<Max_PrForVr && table->vreg[reg].placement[placement] != -1; placement++){ //todo replace 6 with a variable
 		//todo change for each orientation
 		//default orientation for matrix (treating everything like a matrix even if it's just a vector
 

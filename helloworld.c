@@ -124,7 +124,7 @@ int main()
 	printf("-------------------------------------------------------------------------\r\n");
 //	printRegFile(0, 0, 0, 0, 32);
 
-	TestShiftSouth(&allocation_table);
+	TestShiftWest(&allocation_table);
 
     execute(300, 0, 0, 0);
 	return 0;

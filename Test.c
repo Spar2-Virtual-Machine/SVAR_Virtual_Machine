@@ -88,8 +88,8 @@ int TestShiftSouth(AllocationTable *table)
 	Reset_Registers();
 	resetTable(table);
 	srand(12890);
-	int rowN = 30; //1+rand()%100;
-	int colN = 30; //1+rand()%100;
+	int rowN = 40; //1+rand()%100;
+	int colN = 80; //1+rand()%100;
 
 	int arr1[rowN][colN];
 	int arr2[rowN][colN];
@@ -129,6 +129,91 @@ int TestShiftSouth(AllocationTable *table)
 	return 0; //fail by default
 }
 
+int TestShiftEast(AllocationTable *table)
+{
+	Reset_Registers();
+	resetTable(table);
+	srand(12890);
+	int rowN = 40; //1+rand()%100;
+	int colN = 80; //1+rand()%100;
+
+	int arr1[rowN][colN];
+	int arr2[rowN][colN];
+	xil_printf("%p\n", table);
+	for(int i=0; i < rowN; i++)
+	{
+		for(int j=0; j < colN; j++)
+		{
+			arr1[i][j] = j+1000*i;
+			arr2[i][j] = (1)<<16;
+		}
+	}
+	xil_printf("%d Rows and %d Columns \n", rowN, colN);
+
+	//setup the matrix
+	Matrix matrix1;
+	Declare_M(&matrix1, rowN, colN);
+	matrix1.memory = (int*)&arr1;
+	Matrix matrix2;
+	Declare_M(&matrix2, rowN, colN);
+	matrix2.memory = (int*)&arr1;
+	Store_M(&matrix1, 1, table);
+	Store_M(&matrix2, 2, table);
+	table->vreg[1].orientation=1;
+	safeAllocatePRegs(1, 24, NULL, 0, table);
+	safeAllocatePRegs(2, 24, NULL, 0, table);
+
+
+	ShiftEast_M(1, 3, table);
+	ShiftEast_M(2, 4, table);
+	printTablePReg(table);
+	printVReg(3, table);
+	printVReg(4, table);
+	return 0; //fail by default
+}
+
+int TestShiftWest(AllocationTable *table)
+{
+	Reset_Registers();
+	resetTable(table);
+	srand(12890);
+	int rowN = 20; //1+rand()%100;
+	int colN = 40; //1+rand()%100;
+
+	int arr1[rowN][colN];
+	int arr2[rowN][colN];
+	xil_printf("%p\n", table);
+	for(int i=0; i < rowN; i++)
+	{
+		for(int j=0; j < colN; j++)
+		{
+			arr1[i][j] = j+1000*i;
+			arr2[i][j] = (1)<<16;
+		}
+	}
+	xil_printf("%d Rows and %d Columns \n", rowN, colN);
+
+	//setup the matrix
+	Matrix matrix1;
+	Declare_M(&matrix1, rowN, colN);
+	matrix1.memory = (int*)&arr1;
+	Matrix matrix2;
+	Declare_M(&matrix2, rowN, colN);
+	matrix2.memory = (int*)&arr1;
+	Store_M(&matrix1, 1, table);
+	Store_M(&matrix2, 2, table);
+	table->vreg[1].orientation=1;
+	safeAllocatePRegs(1, 24, NULL, 0, table);
+	safeAllocatePRegs(2, 24, NULL, 0, table);
+
+
+	ShiftWest_M(1, 3, table);
+	ShiftWest_M(2, 4, table);
+	printTablePReg(table);
+	printVReg(3, table);
+	printVReg(4, table);
+	return 0; //fail by default
+}
 
 int TestTurnedColumnAccumulation(AllocationTable *table)
 {

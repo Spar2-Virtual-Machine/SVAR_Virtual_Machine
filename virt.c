@@ -441,6 +441,7 @@ extern inline void PrepareReg_Mul_MVM(int rsm, int rsv, int rd, AllocationTable 
 }
 
 void EastLoopAround(int prs, int prd, AllocationTable *table){
+//	printf("East Loop Around %d to %d\n", prs, prd);
 	for(int a = 0; a < Array_dim; a++)
 	{
 		for (int b = 0; b < Tile_dim; b++)
@@ -459,30 +460,58 @@ void ShiftEast_M( int rs, int rd, AllocationTable *table){
 	table->vreg[rd].orientation = table->vreg[rs].orientation;
 	table->vreg[rd].type = table->vreg[rs].type;
 
-	//todo: see if there is a better way to calculate the num of row and column segments
-	int colFol = ceil((float)table->vreg[rs].cols/(float)SPAR_dimension); //calculate the number of column segments
-	int rowFol = ceil((float)table->vreg[rs].rows/(float)SPAR_dimension);
-
-	//make sure that the registers are in the SPAR
-	PrepareRegMM(rs, rd, table);
-
-	int i = 0;
-	for(int s=0; s<rowFol; s++)
+	if(table->vreg[rs].orientation==0)
 	{
-		for(int t=0; t<colFol; t++)
+		//todo: see if there is a better way to calculate the num of row and column segments
+		int colFol = ceil((float)table->vreg[rs].cols/(float)SPAR_dimension); //calculate the number of column segments
+		int rowFol = ceil((float)table->vreg[rs].rows/(float)SPAR_dimension);
+
+		//make sure that the registers are in the SPAR
+		PrepareRegMM(rs, rd, table);
+
+		int i = 0;
+		for(int s=0; s<rowFol; s++)
 		{
-			i = t+(s*colFol);
-			execute(5, table->vreg[rd].placement[i], table->vreg[rs].placement[i], 0);
-			if(t != 0)
+			for(int t=0; t<colFol; t++)
 			{
-//				printf("About to east loop aroud; \t prs: %d; prd: %d;\n", table->vreg[rs].placement[i-1], table->vreg[rd].placement[i]);
-				EastLoopAround(table->vreg[rs].placement[i-1], table->vreg[rd].placement[i], table);
+				i = t+(s*colFol);
+				execute(5, table->vreg[rd].placement[i], table->vreg[rs].placement[i], 0);
+				if(t != 0)
+				{
+	//				printf("About to east loop aroud; \t prs: %d; prd: %d;\n", table->vreg[rs].placement[i-1], table->vreg[rd].placement[i]);
+					EastLoopAround(table->vreg[rs].placement[i-1], table->vreg[rd].placement[i], table);
+				}
+			}
+		}
+	}
+	else
+	{
+		int colFol = ceil((float)table->vreg[rs].rows/(float)SPAR_dimension); //calculate the number of column segments
+		int rowFol = ceil((float)table->vreg[rs].cols/(float)SPAR_dimension);
+		printf("rowFol %d, colFol %d\n", rowFol, colFol);
+
+		//make sure that the registers are in the SPAR
+		PrepareRegMM(rs, rd, table);
+
+		int i = 0;
+		for(int s=0; s<rowFol; s++)
+		{
+			for(int t=0; t<colFol; t++)
+			{
+				i = t*rowFol+s;
+				execute(5, table->vreg[rd].placement[i], table->vreg[rs].placement[i], 0);
+				if(t > 0)
+				{
+//					printf("About to east loop aroud; \t i-s: %d; i-d: %d; t: %d\n", i-rowFol, i, t);
+					EastLoopAround(table->vreg[rs].placement[i-rowFol], table->vreg[rd].placement[i], table);
+				}
 			}
 		}
 	}
 }
 
 void WestLoopAround(int prs, int prd, AllocationTable *table){
+	printf("East Loop Around %d to %d\n", prs, prd);
 	for(int a = 0; a < Array_dim; a++)
 	{
 		for (int b = 0; b < Tile_dim; b++)
@@ -501,24 +530,52 @@ void ShiftWest_M(int rs, int rd, AllocationTable *table){//moves the matrix in o
 	table->vreg[rd].orientation = table->vreg[rs].orientation;
 	table->vreg[rd].type = table->vreg[rs].type;
 
-	//todo: see if there is a better way to calculate the num of row and column segments
-	int colFol = ceil((float)table->vreg[rs].cols/(float)SPAR_dimension); //calculate the number of column segments
-	int rowFol = ceil((float)table->vreg[rs].rows/(float)SPAR_dimension);
-
-	//make sure that the registers are in the SPAR
-	PrepareRegMM(rs, rd, table);
-
-	int i = 0;
-	for(int s=0; s<rowFol; s++)
+	if(table->vreg[rs].orientation==0)
 	{
-		for(int t=0; t<colFol; t++)
+		//todo: see if there is a better way to calculate the num of row and column segments
+		int colFol = ceil((float)table->vreg[rs].cols/(float)SPAR_dimension); //calculate the number of column segments
+		int rowFol = ceil((float)table->vreg[rs].rows/(float)SPAR_dimension);
+		printf("rowFol %d, colFol %d\n", rowFol, colFol);
+
+		//make sure that the registers are in the SPAR
+		PrepareRegMM(rs, rd, table);
+
+		int i = 0;
+		for(int s=0; s<rowFol; s++)
 		{
-			i = t+(s*colFol);
-			execute(6, table->vreg[rd].placement[i], table->vreg[rs].placement[i], 0);
-			if(t == colFol-1)
+			for(int t=0; t<colFol; t++)
 			{
-//				printf("About to west loop aroud; \t prs: %d; prd: %d;\n", table->vreg[rs].placement[i-1], table->vreg[rd].placement[i]);
-				WestLoopAround(table->vreg[rs].placement[i], table->vreg[rd].placement[i-1], table);
+				i = t+(s*colFol);
+				execute(6, table->vreg[rd].placement[i], table->vreg[rs].placement[i], 0);
+				if(t != 0)
+				{
+	//				printf("About to east loop aroud; \t prs: %d; prd: %d;\n", table->vreg[rs].placement[i-1], table->vreg[rd].placement[i]);
+					WestLoopAround(table->vreg[rs].placement[i], table->vreg[rd].placement[i-1], table);
+				}
+			}
+		}
+	}
+	else
+	{
+		int colFol = ceil((float)table->vreg[rs].rows/(float)SPAR_dimension); //calculate the number of column segments
+		int rowFol = ceil((float)table->vreg[rs].cols/(float)SPAR_dimension);
+
+
+		//make sure that the registers are in the SPAR
+		PrepareRegMM(rs, rd, table);
+
+		int i = 0;
+		for(int s=0; s<rowFol; s++)
+		{
+			for(int t=0; t<colFol; t++)
+			{
+				i = t*rowFol+s;
+				execute(6, table->vreg[rd].placement[i], table->vreg[rs].placement[i], 0);
+				if(t > 0)
+				{
+//					printf("About to east loop aroud; \t i-s: %d; i-d: %d; t: %d\n", i-rowFol, i, t);
+					WestLoopAround(table->vreg[rs].placement[i], table->vreg[rd].placement[i-rowFol], table);
+				}
 			}
 		}
 	}
@@ -838,7 +895,7 @@ void Store_M(Matrix* m, int rd, AllocationTable *table) { //does not actually st
 	int rowFol = ceil((float)m->rows/(float)SPAR_dimension);
 
 	int copies = colFol * rowFol;
-	if (copies > numberofreg/minimumNumOfVReg) //todo-->need to actually implement this if statement properly
+	if (copies > Max_PrForVr) //todo-->need to actually implement this if statement properly
 	{
 		printf("not enough registers to load array");
 		return; //exits the function if there are not enough registers

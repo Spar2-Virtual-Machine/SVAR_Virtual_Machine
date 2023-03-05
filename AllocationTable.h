@@ -11,8 +11,8 @@
 #define SRC_ALLOCATIONTABLE_H_
 
 #define Num_VREG 8
-#define Num_PREG 16
-#define Max_PrForVr 6 //Num_PREG/3
+#define Num_PREG 32
+#define Max_PrForVr (Num_PREG/3) //8 //Num_PREG/3
 #define VREG_Data_Size 3200 //arbitrarily chosen for now
 
 typedef struct Matrix{
