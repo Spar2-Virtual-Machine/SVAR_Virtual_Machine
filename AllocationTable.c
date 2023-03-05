@@ -519,6 +519,9 @@ void loadVRegDataToPReg_M(int vRegNum, int pRegNum, int startRow, int startCol, 
 			{
 				t = j-startRow;
 				WRITE_REG((s/(4*Tile_dim))%Array_dim, (t/(4*Tile_dim))%Array_dim, (s/4)%Tile_dim, (t/4)%Tile_dim, ((s*4 +t)%4 + s*4)%16, pRegNum, table->vreg[vRegNum].data[i + j*(table->vreg[vRegNum].cols)]);
+				if((table->vreg[vRegNum].data[i + j*(table->vreg[vRegNum].cols)])%1000 == 24){
+					printf("A: %d,%d;\t T: %d,%d;\ PE: %d; preg: %d;\t x: %d\n",(s/(4*Tile_dim))%Array_dim, (t/(4*Tile_dim))%Array_dim, (s/4)%Tile_dim, (t/4)%Tile_dim, ((s*4 +t)%4 + s*4)%16, pRegNum, table->vreg[vRegNum].data[i + j*(table->vreg[vRegNum].cols)]);
+				}
 			}
 		}
 	}

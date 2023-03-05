@@ -525,14 +525,16 @@ void ShiftWest_M(int rs, int rd, AllocationTable *table){//moves the matrix in o
 }
 
 void SouthLoopAround(int prs, int prd, AllocationTable *table){
+	printf("South loop around %d to %d\n", prs, prd);
 	for(int a = 0; a < Array_dim; a++)
 	{
 		for (int b = 0; b < Tile_dim; b++)
 		{
-			for(int j = 12; j < 16; j+=1)
+			for(int j = 0; j < 4; j+=1)
 			{
-				int x = READ_REG(a, 0, b, 0, j-12, prs);//last 4 pes
-				WRITE_REG(a, Array_dim-1, b, Tile_dim-1, j, prd, x);//first 4 pes
+				int x = READ_REG(Array_dim-1, a, Tile_dim-1, b, j+12, prs);
+						//READ_REG(0, a, 0, b, j, prs);//last 4 pes
+				WRITE_REG(0, a, 0, b, j, prd, x);//first 4 pes
 			}
 		}
 	}
@@ -550,33 +552,52 @@ void ShiftSouth_M(int rs, int rd, AllocationTable *table){
 	{
 		colFol = ceil((float)table->vreg[rs].cols/(float)SPAR_dimension);
 		rowFol = ceil((float)table->vreg[rs].rows/(float)SPAR_dimension);
+		//make sure that the registers are in the SPAR
+			PrepareRegMM(rs, rd, table);
+
+			int i = 0;
+			for(int s=0; s<rowFol; s++)
+			{
+				for(int t=0; t<colFol; t++)
+				{
+					i = t+(s*colFol);
+					execute(7, table->vreg[rd].placement[i], table->vreg[rs].placement[i], 0);
+					if(s != 0)//Do not need to do this for the first row. Will get from source preg above and copy first row to current destination
+					{
+		//				printf("About to south loop aroud; \t prs: %d; prd: %d;\n", table->vreg[rs].placement[i-1], table->vreg[rd].placement[i]);
+						SouthLoopAround(table->vreg[rs].placement[i-colFol], table->vreg[rd].placement[i], table);
+					}
+				}
+			}
 	}
 	else
 	{
 		colFol = ceil((float)table->vreg[rs].rows/(float)SPAR_dimension);
 		rowFol = ceil((float)table->vreg[rs].cols/(float)SPAR_dimension);
-	}
-	//make sure that the registers are in the SPAR
-	PrepareRegMM(rs, rd, table);
+		//make sure that the registers are in the SPAR
+		PrepareRegMM(rs, rd, table);
 
-	int i = 0;
-	for(int s=0; s<rowFol; s++)
-	{
-		for(int t=0; t<colFol; t++)
+		int i = 0;
+		for(int s=0; s<rowFol; s++)
 		{
-			i = t+(s*colFol);
-			execute(7, table->vreg[rd].placement[i], table->vreg[rs].placement[i], 0);
-			if(t == colFol-1)//todo: add a properly working loop around when only 1 dimension tall
+			for(int t=0; t<colFol; t++)
 			{
-//				printf("About to south loop aroud; \t prs: %d; prd: %d;\n", table->vreg[rs].placement[i-1], table->vreg[rd].placement[i]);
-				SouthLoopAround(table->vreg[rs].placement[i], table->vreg[rd].placement[i-1], table);
+				i = t+(s*colFol);
+				execute(7, table->vreg[rd].placement[i], table->vreg[rs].placement[i], 0);
+				if(t != 0)//Do not need to do this for the first row. Will get from source preg above and copy first row to current destination
+				{
+	//				printf("About to south loop aroud; \t prs: %d; prd: %d;\n", table->vreg[rs].placement[i-1], table->vreg[rd].placement[i]);
+					SouthLoopAround(table->vreg[rs].placement[i-1], table->vreg[rd].placement[i], table);
+				}
 			}
 		}
 	}
+
 }
 
 
 void NorthLoopAround(int prs, int prd, AllocationTable *table){
+	printf("NLA-- %d to %d\n", prs, prd);
 	for(int a = 0; a < Array_dim; a++)
 	{
 		for (int b = 0; b < Tile_dim; b++)
@@ -602,27 +623,42 @@ void ShiftNorth_M(int rs, int rd, AllocationTable *table){
 	{
 		colFol = ceil((float)table->vreg[rs].cols/(float)SPAR_dimension);
 		rowFol = ceil((float)table->vreg[rs].rows/(float)SPAR_dimension);
+		//make sure that the registers are in the SPAR
+		PrepareRegMM(rs, rd, table);
+
+		int i = 0;
+		for(int s=0; s<rowFol; s++)
+		{
+			for(int t=0; t<colFol; t++)
+			{
+				i = t+(s*colFol);
+				execute(8, table->vreg[rd].placement[i], table->vreg[rs].placement[i], 0);
+				if(s != 0)
+				{
+	//				printf("About to north loop aroud; \t prs: %d; prd: %d;\n", table->vreg[rs].placement[i], table->vreg[rd].placement[i-colFol]);
+					NorthLoopAround(table->vreg[rs].placement[i], table->vreg[rd].placement[i-colFol], table);
+				}
+			}
+		}
 	}
 	else
 	{
 		colFol = ceil((float)table->vreg[rs].rows/(float)SPAR_dimension);
 		rowFol = ceil((float)table->vreg[rs].cols/(float)SPAR_dimension);
-	}
+		//make sure that the registers are in the SPAR
+		PrepareRegMM(rs, rd, table);
 
-	//make sure that the registers are in the SPAR
-	PrepareRegMM(rs, rd, table);
-
-	int i = 0;
-	for(int s=0; s<rowFol; s++)
-	{
-		for(int t=0; t<colFol; t++)
+		int i = 0;
+		for(int s=0; s<rowFol; s++)
 		{
-			i = t+(s*colFol);
-			execute(8, table->vreg[rd].placement[i], table->vreg[rs].placement[i], 0);
-			if(s != 0)
+			for(int t=0; t<colFol; t++)
 			{
-				printf("About to north loop aroud; \t prs: %d; prd: %d;\n", table->vreg[rs].placement[i], table->vreg[rd].placement[i-colFol]);
-				NorthLoopAround(table->vreg[rs].placement[i], table->vreg[rd].placement[i-colFol], table);
+				i = t+(s*colFol);
+				execute(8, table->vreg[rd].placement[i], table->vreg[rs].placement[i], 0);
+				if(t != 0)
+				{
+					NorthLoopAround(table->vreg[rs].placement[i], table->vreg[rd].placement[i-1], table);
+				}
 			}
 		}
 	}
