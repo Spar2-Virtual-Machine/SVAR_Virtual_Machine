@@ -13,7 +13,7 @@
 #include "math.h"
 #include "sleep.h"
 
-int LEN = MAX_LEN << 24;
+int LEN = MAX_LEN << 24; //todo: see if this needs to be changed to account for spar size change
 int ShL_cnt = 0;
 int ShR_cnt = 0;
 int ShN_cnt = 0;
@@ -22,6 +22,15 @@ int mult_cnt = 0;
 int add_cnt = 0;
 int sub_cnt = 0;
 
+int sparAdd_cnt=0;
+int sparSub_cnt=0;
+int sparMul_cnt=0;
+int sparShN_cnt=0;
+int sparShS_cnt=0;
+int sparShE_cnt=0;
+int sparShW_cnt=0;
+int sparWR_cnt=0;
+int sparRD_cnt = 0;
 
 void ColumnToColumn(int rd, int rs, int copy){
 
@@ -117,52 +126,70 @@ void FxP_Conversion(int row, int col, float in[][col], int out[][col] ){
 	}
 }
 
-void ELEMENTWISE_MULTIPLICATION(int matrixA_reg, int matrixB_reg, int Result_Reg){
 
-	execute(2,Result_Reg,matrixA_reg,matrixB_reg);
-	mult_cnt++;
+void SHIFT_NORTH(int rs, int rd){
+	execute(8, rd, rs, 0);
 }
 
-void MARTIX_ADDITION(int matrixA_reg, int matrixB_reg, int Result_Reg){
+void SHIFT_SOUTH(int rs, int rd){
+	execute(7, rd, rs, 0);
+}
+
+void SHIFT_EAST(int rs, int rd){
+	execute(5, rd, rs, 0);
+}
+
+void SHIFT_WEST(int rs, int rd){
+	execute(6, rd, rs, 0);
+}
+
+void ELEMENTWISE_MULTIPLICATION(int matrixA_reg, int matrixB_reg, int Result_Reg){
+	execute(2,Result_Reg,matrixA_reg,matrixB_reg);
+//	mult_cnt++;
+}
+
+
+void MATRIX_ADDITION(int matrixA_reg, int matrixB_reg, int Result_Reg){
 
 	execute(0,Result_Reg,matrixA_reg,matrixB_reg);
-	add_cnt++;
+//	add_cnt++;
 }
 
-void MARTIX_SUBTRACTION(int matrixA_reg, int matrixB_reg, int Result_Reg){
+void MATRIX_SUBTRACTION(int matrixA_reg, int matrixB_reg, int Result_Reg){
 
 	execute(1,Result_Reg,matrixA_reg,matrixB_reg);
-	sub_cnt++;
+//	sub_cnt++;
 }
 
-void MARTIX_MULTIPLICATION(int matrixA_reg, int matrixB_reg, int Result_Reg, int matrixA_col, int block_dimension){
+void MATRIX_MULTIPLICATION(int matrixA_reg, int matrixB_reg, int Result_Reg, int matrixA_col, int block_dimension){
 
 	int i;
 	execute(2,21,matrixB_reg,matrixA_reg);	//Mult
-	mult_cnt++;
+//	mult_cnt++;
 	execute(5,27,21,0);						//ShiftEast
-	ShR_cnt++;
+//	ShR_cnt++;
 	execute(0,22,27,21);					//Add
-	add_cnt++;
+//	add_cnt++;
 	//shift and add
 	for( i = 0; i < matrixA_col-2; i++)
 	{
 		execute(5,23,22,0);					//ShiftEast
-		ShR_cnt++;
+//		ShR_cnt++;
 		execute(0,22,23,21);				//Add
-		add_cnt++;
+//		add_cnt++;
 	}
 	//shift till edge
 	for( i = 0; i < (block_dimension*4) - matrixA_col; i++)
 	{
 		execute(5,22,22,0);					//ShiftEast
-		ShR_cnt++;
+//		ShR_cnt++;
 	}
 	execute(0,Result_Reg,22,0);
-	add_cnt++;
+//	add_cnt++;
 	return;
 
 }
+
 
 unsigned int Log2n(unsigned int n)
 {
@@ -175,21 +202,21 @@ void MARTIX_MULTIPLICATION_Optimized(int matrixA_reg, int matrixB_reg, int Resul
 	unsigned int log_colA = Log2n(matrixA_col);
 	int col_cnt = 0;
 	execute(2,21,matrixB_reg,matrixA_reg);	//Mult
-	mult_cnt++;
+//	mult_cnt++;
 	execute(0,23,21,0);						//Add
-	add_cnt++;
+//	add_cnt++;
 	int i, j;
 	for( i=0; i<log_colA; i++){
 		execute(5,22,21,0);						//ShiftEast
 		col_cnt++;
-		ShR_cnt++;
+//		ShR_cnt++;
 		for( j=0; j<pow((double)2,(double)i)-(double)1; j++){
 			execute(5,22,22,0);						//ShiftEast
 			col_cnt++;
-			ShR_cnt++;
+//			ShR_cnt++;
 		}
 		execute(0,21,22,21);					//Add
-		add_cnt++;
+//		add_cnt++;
 	}
 	if(col_cnt != matrixA_col -1)
 	{
@@ -197,9 +224,9 @@ void MARTIX_MULTIPLICATION_Optimized(int matrixA_reg, int matrixB_reg, int Resul
 		for( i = col_cnt; i < matrixA_col; i++)
 		{
 			execute(5,22,21,0);					//ShiftEast
-			ShR_cnt++;
+//			ShR_cnt++;
 			execute(0,21,23,22);				//Add
-			add_cnt++;
+//			add_cnt++;
 		}
 	}
 
@@ -207,11 +234,11 @@ void MARTIX_MULTIPLICATION_Optimized(int matrixA_reg, int matrixB_reg, int Resul
 	for( i = 0; i < (block_dimension*4) - matrixA_col; i++)
 	{
 		execute(5,21,21,0);					//ShiftEast
-		ShR_cnt++;
+//		ShR_cnt++;
 	}
 
 	execute(0,Result_Reg,21,0);
-	add_cnt++;
+//	add_cnt++;
 	return;
 
 }
@@ -348,7 +375,7 @@ int toggleBit(int n, int k){
 }
 
 void WRITE_REG(int Tile_i, int Tile_j, int BRAM_i, int BRAM_j, int PE, int reg, unsigned int data){
-	static int sparWR_cnt = 0;
+
 	sparWR_cnt++;
 	int base = reg*32;
 	int i;
@@ -375,7 +402,8 @@ void WRITE_REG(int Tile_i, int Tile_j, int BRAM_i, int BRAM_j, int PE, int reg, 
 }
 
 unsigned int READ_REG(int Tile_i, int Tile_j, int BRAM_i, int BRAM_j, int PE, int reg){
-	static int sparRD_cnt = 0;
+//	static int sparRD_cnt = 0;
+
 	sparRD_cnt++;
 	int base = reg*32;
 	unsigned int out;
@@ -492,13 +520,6 @@ void printRegFile(int Tile_i, int Tile_j, int BRAM_i, int BRAM_j, int number_of_
 int execute(int opcode, int rd, int rs1, int rs2)
 {
 	switch(opcode){
-	static int sparAdd_cnt = 0;
-	static int sparSub_cnt = 0;
-	static int sparMul_cnt = 0;
-	static int sparShN_cnt = 0;
-	static int sparShS_cnt = 0;
-	static int sparShE_cnt = 0;
-	static int sparShW_cnt = 0;
 		case 0:
 			sparAdd_cnt++;
 			break;
@@ -510,7 +531,6 @@ int execute(int opcode, int rd, int rs1, int rs2)
 			break;
 		case 5:
 			sparShE_cnt++;
-			printf("SE\n");
 			break;
 		case 6:
 			sparShW_cnt++;
@@ -520,15 +540,6 @@ int execute(int opcode, int rd, int rs1, int rs2)
 			break;
 		case 8:
 			sparShN_cnt++;
-			break;
-		case 300:
-			printf("Add Count: %d\n", sparAdd_cnt);
-			printf("Sub Count: %d\n", sparSub_cnt);
-			printf("Mul Count: %d\n", sparMul_cnt);
-			printf("Shift North Count: %d\n", sparShN_cnt);
-			printf("Shift South Count: %d\n", sparShS_cnt);
-			printf("Shift East Count: %d\n", sparShE_cnt);
-			printf("Shift West Count: %d\n", sparShW_cnt);
 			break;
 	};
 
@@ -541,7 +552,7 @@ int execute(int opcode, int rd, int rs1, int rs2)
 	BIT_SERIAL_mWriteReg(XPAR_BIT_SERIAL_0_S00_AXI_BASEADDR, BIT_SERIAL_S00_AXI_SLV_REG1_OFFSET, 0x00000003+LEN);//start = 1, reset = 1
 	usleep_A53(12);
 	BIT_SERIAL_mWriteReg(XPAR_BIT_SERIAL_0_S00_AXI_BASEADDR, BIT_SERIAL_S00_AXI_SLV_REG1_OFFSET, 0x00000001+LEN);//start = 0, reset = 1
-	usleep_A53(13);
+	usleep_A53(24);
 	return 0;
 }
 

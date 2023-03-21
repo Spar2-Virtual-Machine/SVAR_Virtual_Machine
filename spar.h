@@ -6,15 +6,23 @@
 //define values
 #define MAX_LEN 32
 #define FIXED_POINT_FRACTIONAL_BITS 16
-#define Array_dim  3
-#define Tile_dim  2
+#define Array_dim  4
+#define Tile_dim  4
 #define divide_size_W 4
 #define divide_size_U 4
 #define m1 4						//size of hidden layers
 #define p 4							//size of inputs
 #define q 1							//size of outputs
 #define epoch 1
-
+extern int sparAdd_cnt;
+extern int sparSub_cnt;
+extern int sparMul_cnt;
+extern int sparShN_cnt;
+extern int sparShS_cnt;
+extern int sparShE_cnt;
+extern int sparShW_cnt;
+extern int sparWR_cnt;
+extern int sparRD_cnt;
 //define types
 typedef int32_t fixed_point_t;
 
@@ -27,9 +35,14 @@ void print2DArray(int rows, int cols, int arr[][cols]);
 fixed_point_t float_to_fixed(double input); //may need to change this as it is an inline function
 void FxP_Conversion(int row, int col, float in[][col], int out[][col] );
 void ELEMENTWISE_MULTIPLICATION(int matrixA_reg, int matrixB_reg, int Result_Reg);
-void MARTIX_ADDITION(int matrixA_reg, int matrixB_reg, int Result_Reg);
-void MARTIX_SUBTRACTION(int matrixA_reg, int matrixB_reg, int Result_Reg);
-void MARTIX_MULTIPLICATION(int matrixA_reg, int matrixB_reg, int Result_Reg, int matrixA_col, int block_dimension);
+void SHIFT_NORTH(int rs, int rd);
+void SHIFT_SOUTH(int rs, int rd);
+void SHIFT_EAST(int rs, int rd);
+void SHIFT_WEST(int rs, int rd);
+
+void MATRIX_ADDITION(int matrixA_reg, int matrixB_reg, int Result_Reg);
+void MATRIX_SUBTRACTION(int matrixA_reg, int matrixB_reg, int Result_Reg);
+void MATRIX_MULTIPLICATION(int matrixA_reg, int matrixB_reg, int Result_Reg, int matrixA_col, int block_dimension);
 unsigned int Log2n(unsigned int n);
 void MARTIX_MULTIPLICATION_Optimized(int matrixA_reg, int matrixB_reg, int Result_Reg, int matrixA_col, int block_dimension);
 void WRITE_Matrix(int row, int col, int W[][col], int reg, int copy);

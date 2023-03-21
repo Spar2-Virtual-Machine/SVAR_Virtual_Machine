@@ -82,50 +82,26 @@
 //Allocation Table for the VM
 static AllocationTable allocation_table;
 
-void printPReg(int reg){
-	int data = 0;
-	for(int x=0; x<Array_dim; x++)
-	{
-		for(int y=0; y<Tile_dim; y++)
-		{
-			for(int pe=0; pe<16; pe+=4)
-			{
-				for(int i=0; i<Array_dim; i++)
-				{
-					for(int j=0; j<Tile_dim; j++)
-					{
-						data = READ_REG(i, x, j, y, pe, reg);
-						printf("%d, ", data);
-						data = READ_REG(i, x, j, y, pe+1, reg);
-						printf("%d, ", data);
-						data = READ_REG(i, x, j, y, pe+2, reg);
-						printf("%d, ", data);
-						data = READ_REG(i, x, j, y, pe+3, reg);
-						printf("%d, ", data);
-					}
-				}
-				printf("\n");
-			}
-		}
-	}
-}
+
 
 int main()
 {
 	init_platform();
 	cleanup_platform();
 	//reset all the registers in the array to zero
+	resetTable(&allocation_table);
 	Reset_Registers();
 	xil_printf("RESET REGISTERS IS DONE! \n");
-
-	//setup allocation table
-	resetTable(&allocation_table);
-
 	printf("-------------------------------------------------------------------------\r\n");
 //	printRegFile(0, 0, 0, 0, 32);
-
-	TestShiftWest(&allocation_table);
-
-    execute(300, 0, 0, 0);
+//	MultiplyAccumulateMatrixVectorTest(&allocation_table);
+//	Test_Elementwise_1Segment(&allocation_table);
+//	Test_Elementwise_2Segment(&allocation_table);
+//	Test_Elementwise_4Segment(&allocation_table);
+//	Test_Elementwise_8Segment(&allocation_table);
+//	Test_MulAcc_1Segment(&allocation_table);
+//	Test_MulAcc_2Segment(&allocation_table);
+//	Test_MulAcc_4Segment(&allocation_table);
+	Test_MulAcc_8Segment(&allocation_table);
 	return 0;
 }

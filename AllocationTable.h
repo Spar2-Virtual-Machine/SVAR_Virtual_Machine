@@ -12,8 +12,13 @@
 
 #define Num_VREG 8
 #define Num_PREG 32
-#define Max_PrForVr (Num_PREG/3) //8 //Num_PREG/3
-#define VREG_Data_Size 3200 //arbitrarily chosen for now
+#define Max_PrForVr 8//(Num_PREG/4) //8 //Num_PREG/3
+#define VREG_Data_Size 40000 //arbitrarily chosen for now
+
+#define numberofreg 16 //todo-->have this redefined to use a more global variable
+#define SPAR_dimension (4*Array_dim*Tile_dim) //number of PE's found either horizontally or vertically
+#define minimumNumOfVReg 4 //minimum number of virtual registers that need to fit in spar to perform operations
+#define multiplicationOverFlow true //indicate that multiplication changes the values in the physical register above the result register
 
 typedef struct Matrix{
 	int *memory; //type subject to change. May convert to the fixed point type
@@ -55,10 +60,11 @@ void resetTable(AllocationTable *table);
 void allocateVRegM(Matrix *m, int vRegNum, int orientation, AllocationTable *table);
 void allocateVRegM_T(Matrix *m, int vRegNum, int orientation, AllocationTable *table);
 void allocateVRegV(Vector *v, int vRegNum, AllocationTable *table);
-void safeAllocatePRegs(int vRegNum, int maxDim, int protectedVReg[], int numProtected, AllocationTable *table);
-void safeAllocateEmptyPRegs(int vRegNum, int maxDim, int protectedVReg[], int numProtected, AllocationTable *table); //allocate without loading new data to SPAR
+void safeAllocatePRegs(int vRegNum, int protectedVReg[], int numProtected, AllocationTable *table);
+void safeAllocateEmptyPRegs(int vRegNum, int protectedVReg[], int numProtected, AllocationTable *table); //allocate without loading new data to SPAR
 
 void removeVRegFromPRegs(int vRegNum, AllocationTable *table);
+void removeVRegFromPRegsNoData(int vRegNum, AllocationTable *table);
 void loadVRegDataToPReg_M(int vRegNum, int pRegNum, int startRow, int startCol, int endRow, int endCol, AllocationTable *table);
 void loadVRegDataToPReg_V(int vRegNum, int pRegNum, int startRow, int endRow, AllocationTable *table);
 void copyFromPRegsToVRegData(int vRegNum, AllocationTable *table); //move data from SPAR to memory
@@ -68,6 +74,6 @@ void printTablePReg(AllocationTable *table);
 void printVRegData(int reg, AllocationTable *table);
 void printVReginPReg(int reg, AllocationTable *table); //prints off the data in the PREGS as one ginat 2d array
 void printVReg(int reg, AllocationTable *table);
-
+void printPReg(int reg);
 
 #endif /* SRC_ALLOCATIONTABLE_H_ */
