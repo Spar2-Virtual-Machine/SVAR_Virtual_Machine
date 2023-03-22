@@ -148,7 +148,6 @@ void ELEMENTWISE_MULTIPLICATION(int matrixA_reg, int matrixB_reg, int Result_Reg
 //	mult_cnt++;
 }
 
-
 void MATRIX_ADDITION(int matrixA_reg, int matrixB_reg, int Result_Reg){
 
 	execute(0,Result_Reg,matrixA_reg,matrixB_reg);
@@ -590,4 +589,18 @@ int getTrans(int* ram){
 	}
 	return reg;
 
+}
+
+void WEST_COLUMN_MOVE(int rs, int rd){
+	for(int a = 0; a < Array_dim; a++)
+	{
+		for (int b = 0; b < Tile_dim; b++)
+		{
+			for(int j = 3; j < 16; j+=4)
+			{
+				int x = READ_REG(a, 0, b, 0, j-3, rs);
+				WRITE_REG(a, Array_dim-1, b, Tile_dim-1, j, rd, x);
+			}
+		}
+	}
 }

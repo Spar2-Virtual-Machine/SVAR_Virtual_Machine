@@ -27,6 +27,7 @@
 #include "virt.h"
 #include "xtime_l.h"
 
+//used just to test things are working correctly
 void MultiplyMV(int matrix[], int vector[], int rows, int cols, int result[]);
 int TestShiftNorth(AllocationTable *table);
 int TestShiftSouth(AllocationTable *table);
@@ -42,8 +43,9 @@ int ConvertMatrixToVectorTurnedTest(AllocationTable *table);
 int MultiplyAccumulateMatrixVectorSetupTest(AllocationTable *table);
 int MultiplyAccumulateMatrixVectorTest(AllocationTable *table);
 
-int MLP_Benchmark(AllocationTable *table);
+int MLP_Benchmark(AllocationTable *table); //not used
 
+//test for timing and instruction count
 int Test_Elementwise_1Segment(AllocationTable *table);
 int Test_Elementwise_2Segment(AllocationTable *table);
 int Test_Elementwise_4Segment(AllocationTable *table);

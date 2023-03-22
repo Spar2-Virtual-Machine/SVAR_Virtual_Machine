@@ -1639,11 +1639,10 @@ int Test_MulAcc_1Segment(AllocationTable *table){
 		MATRIX_ADDITION(17, 25, 17);
 	}
 	PrintCounts();
-	printPReg(17);
 
 	//get time for 100 iterations
 	XTime_GetTime(&tStart);
-	for(int i=0; i<10; i++)
+	for(int i=0; i<100; i++)
 	{
 		//fill entire preg for vector
 		//clear preg 0
@@ -1685,7 +1684,7 @@ int Test_MulAcc_1Segment(AllocationTable *table){
 	PrintCounts();
 
 	XTime_GetTime(&tStart);
-	for(int i=0; i<10; i++)
+	for(int i=0; i<100; i++)
 	{
 		Mul_MV(1,2,3, table); //here
 	}
@@ -1768,7 +1767,7 @@ int Test_MulAcc_2Segment(AllocationTable *table){
 	PrintCounts();
 
 	XTime_GetTime(&tStart);
-	for(int i=0; i<10; i++)
+	for(int i=0; i<100; i++)
 	{
 		//fill entire preg 9 for vector
 		MATRIX_SUBTRACTION(1, 1, 0);
@@ -1813,7 +1812,7 @@ int Test_MulAcc_2Segment(AllocationTable *table){
 	PrintCounts();
 
 	XTime_GetTime(&tStart);
-	for(int i=0; i<10; i++)
+	for(int i=0; i<100; i++)
 	{
 		Mul_MV(1,2,3, table); //here
 	}
@@ -1864,10 +1863,9 @@ int Test_MulAcc_4Segment(AllocationTable *table){
 	WRITE_Matrix_Large(rowN, colN, 1, 0, 64, 64, arr1, 3, 1, 0); //copy=1 for 2d array //goes into preg 3
 	WRITE_Matrix_Large(rowN, colN, 1, 1, 64, 64, arr1, 4, 1, 0); //copy=1 for 2d array //goes into preg 4
 
+	//could have used subtraction method, but this is just for clearing the pregisters. Not timeed or anything.
 	execute(1, 9, 1, 1);
-//	MATRIX_SUBTRACTION(1, 1, 9);
 	execute(1, 10, 1, 1);
-//	MATRIX_SUBTRACTION(1, 1, 10);
 	WRITE_Matrix_Large(1, colN, 0, 0, 1, 64, arr2, 9, 1, 0); //goes into preg9
 	//WRITE_Matrix_Large(int row, int col, int block_row, int block_col, int row_blk_size, int col_blk_size, int W[][col], int reg, int copy, int block_dimension)
 	WRITE_Matrix_Large(1, colN, 0, 1, 1, 64, arr2, 10, 1, 0); //goes into preg10
@@ -1899,31 +1897,11 @@ int Test_MulAcc_4Segment(AllocationTable *table){
 	//accumulate
 	SHIFT_WEST(17, 25);
 	//move West Edge from 18 to 25
-	for(int a = 0; a < Array_dim; a++)
-	{
-		for (int b = 0; b < Tile_dim; b++)
-		{
-			for(int j = 3; j < 16; j+=4)
-			{
-				int x = READ_REG(a, 0, b, 0, j-3, 18);//READ_REG(a, Array_dim-1, b, Tile_dim-1, j, rs);
-				WRITE_REG(a, Array_dim-1, b, Tile_dim-1, j, 25, x);
-			}
-		}
-	}
+	WEST_COLUMN_MOVE(18, 25);
 	SHIFT_WEST(18, 26);
 	SHIFT_WEST(19, 27);
 	//move West Edge from 20 to 27
-	for(int a = 0; a < Array_dim; a++)
-	{
-		for (int b = 0; b < Tile_dim; b++)
-		{
-			for(int j = 3; j < 16; j+=4)
-			{
-				int x = READ_REG(a, 0, b, 0, j-3, 20);//READ_REG(a, Array_dim-1, b, Tile_dim-1, j, rs);
-				WRITE_REG(a, Array_dim-1, b, Tile_dim-1, j, 27, x);
-			}
-		}
-	}
+	WEST_COLUMN_MOVE(20, 27);
 	SHIFT_WEST(20, 28);
 	MATRIX_ADDITION(17, 25, 17);
 	MATRIX_ADDITION(18, 26, 18);
@@ -1933,31 +1911,11 @@ int Test_MulAcc_4Segment(AllocationTable *table){
 	{
 		SHIFT_WEST(25, 25);
 		//move West Edge from 26 to 25
-		for(int a = 0; a < Array_dim; a++)
-		{
-			for (int b = 0; b < Tile_dim; b++)
-			{
-				for(int j = 3; j < 16; j+=4)
-				{
-					int x = READ_REG(a, 0, b, 0, j-3, 26);//READ_REG(a, Array_dim-1, b, Tile_dim-1, j, rs);
-					WRITE_REG(a, Array_dim-1, b, Tile_dim-1, j, 25, x);
-				}
-			}
-		}
+		WEST_COLUMN_MOVE(26, 25);
 		SHIFT_WEST(26, 26);
 		SHIFT_WEST(27, 27);
 		//move West Edge from 28 to 27
-		for(int a = 0; a < Array_dim; a++)
-		{
-			for (int b = 0; b < Tile_dim; b++)
-			{
-				for(int j = 3; j < 16; j+=4)
-				{
-					int x = READ_REG(a, 0, b, 0, j-3, 28);//READ_REG(a, Array_dim-1, b, Tile_dim-1, j, rs);
-					WRITE_REG(a, Array_dim-1, b, Tile_dim-1, j, 27, x);
-				}
-			}
-		}
+		WEST_COLUMN_MOVE(28, 27);
 		SHIFT_WEST(28, 28);
 		//add into result
 		MATRIX_ADDITION(17, 25, 17);
@@ -2012,31 +1970,11 @@ int Test_MulAcc_4Segment(AllocationTable *table){
 		{
 			SHIFT_WEST(25, 25);
 			//move West Edge from 26 to 25
-			for(int a = 0; a < Array_dim; a++)
-			{
-				for (int b = 0; b < Tile_dim; b++)
-				{
-					for(int j = 3; j < 16; j+=4)
-					{
-						int x = READ_REG(a, 0, b, 0, j-3, 26);//READ_REG(a, Array_dim-1, b, Tile_dim-1, j, rs);
-						WRITE_REG(a, Array_dim-1, b, Tile_dim-1, j, 25, x);
-					}
-				}
-			}
+			WEST_COLUMN_MOVE(26, 25);
 			SHIFT_WEST(26, 26);
 			SHIFT_WEST(27, 27);
 			//move West Edge from 28 to 27
-			for(int a = 0; a < Array_dim; a++)
-			{
-				for (int b = 0; b < Tile_dim; b++)
-				{
-					for(int j = 3; j < 16; j+=4)
-					{
-						int x = READ_REG(a, 0, b, 0, j-3, 28);//READ_REG(a, Array_dim-1, b, Tile_dim-1, j, rs);
-						WRITE_REG(a, Array_dim-1, b, Tile_dim-1, j, 27, x);
-					}
-				}
-			}
+			WEST_COLUMN_MOVE(28, 27);
 			SHIFT_WEST(28, 28);
 			//add into result
 			MATRIX_ADDITION(17, 25, 17);
@@ -2154,59 +2092,19 @@ int Test_MulAcc_8Segment(AllocationTable *table){
 	//accumulate
 	SHIFT_WEST(17, 25);
 	//move West Edge from 18 to 25
-	for(int a = 0; a < Array_dim; a++)
-	{
-		for (int b = 0; b < Tile_dim; b++)
-		{
-			for(int j = 3; j < 16; j+=4)
-			{
-				int x = READ_REG(a, 0, b, 0, j-3, 18);//READ_REG(a, Array_dim-1, b, Tile_dim-1, j, rs);
-				WRITE_REG(a, Array_dim-1, b, Tile_dim-1, j, 25, x);
-			}
-		}
-	}
+	WEST_COLUMN_MOVE(18, 25);
 	SHIFT_WEST(18, 26);
 	SHIFT_WEST(19, 27);
 	//move West Edge from 20 to 27
-	for(int a = 0; a < Array_dim; a++)
-	{
-		for (int b = 0; b < Tile_dim; b++)
-		{
-			for(int j = 3; j < 16; j+=4)
-			{
-				int x = READ_REG(a, 0, b, 0, j-3, 20);//READ_REG(a, Array_dim-1, b, Tile_dim-1, j, rs);
-				WRITE_REG(a, Array_dim-1, b, Tile_dim-1, j, 27, x);
-			}
-		}
-	}
+	WEST_COLUMN_MOVE(20, 27);
 	SHIFT_WEST(20, 28);
 	SHIFT_WEST(21, 29);
 	//move West Edge from 22 to 29
-	for(int a = 0; a < Array_dim; a++)
-	{
-		for (int b = 0; b < Tile_dim; b++)
-		{
-			for(int j = 3; j < 16; j+=4)
-			{
-				int x = READ_REG(a, 0, b, 0, j-3, 22);//READ_REG(a, Array_dim-1, b, Tile_dim-1, j, rs);
-				WRITE_REG(a, Array_dim-1, b, Tile_dim-1, j, 29, x);
-			}
-		}
-	}
+	WEST_COLUMN_MOVE(22, 29);
 	SHIFT_WEST(22, 30);
 	SHIFT_WEST(23, 31);
 	//move West Edge from 24 to 31
-	for(int a = 0; a < Array_dim; a++)
-	{
-		for (int b = 0; b < Tile_dim; b++)
-		{
-			for(int j = 3; j < 16; j+=4)
-			{
-				int x = READ_REG(a, 0, b, 0, j-3, 24);//READ_REG(a, Array_dim-1, b, Tile_dim-1, j, rs);
-				WRITE_REG(a, Array_dim-1, b, Tile_dim-1, j, 31, x);
-			}
-		}
-	}
+	WEST_COLUMN_MOVE(24, 31);
 	SHIFT_WEST(24, 0);
 
 	MATRIX_ADDITION(17, 25, 17);
@@ -2221,59 +2119,19 @@ int Test_MulAcc_8Segment(AllocationTable *table){
 	{
 		SHIFT_WEST(25, 25);
 		//move West Edge from 26 to 25
-		for(int a = 0; a < Array_dim; a++)
-		{
-			for (int b = 0; b < Tile_dim; b++)
-			{
-				for(int j = 3; j < 16; j+=4)
-				{
-					int x = READ_REG(a, 0, b, 0, j-3, 26);
-					WRITE_REG(a, Array_dim-1, b, Tile_dim-1, j, 25, x);
-				}
-			}
-		}
+		WEST_COLUMN_MOVE(26, 25);
 		SHIFT_WEST(26, 26);
 		SHIFT_WEST(27, 27);
 		//move West Edge from 28 to 27
-		for(int a = 0; a < Array_dim; a++)
-		{
-			for (int b = 0; b < Tile_dim; b++)
-			{
-				for(int j = 3; j < 16; j+=4)
-				{
-					int x = READ_REG(a, 0, b, 0, j-3, 28);
-					WRITE_REG(a, Array_dim-1, b, Tile_dim-1, j, 27, x);
-				}
-			}
-		}
+		WEST_COLUMN_MOVE(28, 27);
 		SHIFT_WEST(28, 28);
 		SHIFT_WEST(29, 29);
 		//move West Edge from 30 to 29
-		for(int a = 0; a < Array_dim; a++)
-		{
-			for (int b = 0; b < Tile_dim; b++)
-			{
-				for(int j = 3; j < 16; j+=4)
-				{
-					int x = READ_REG(a, 0, b, 0, j-3, 30);
-					WRITE_REG(a, Array_dim-1, b, Tile_dim-1, j, 29, x);
-				}
-			}
-		}
+		WEST_COLUMN_MOVE(30, 29);
 		SHIFT_WEST(30, 30);
 		SHIFT_WEST(31, 31);
 		//move West Edge from 0 to 31
-		for(int a = 0; a < Array_dim; a++)
-		{
-			for (int b = 0; b < Tile_dim; b++)
-			{
-				for(int j = 3; j < 16; j+=4)
-				{
-					int x = READ_REG(a, 0, b, 0, j-3, 0);
-					WRITE_REG(a, Array_dim-1, b, Tile_dim-1, j, 31, x);
-				}
-			}
-		}
+		WEST_COLUMN_MOVE(0, 31);
 		SHIFT_WEST(0, 0);
 		//add into result
 		MATRIX_ADDITION(17, 25, 17);
@@ -2286,28 +2144,117 @@ int Test_MulAcc_8Segment(AllocationTable *table){
 		MATRIX_ADDITION(24, 0, 24);
 	}
 	PrintCounts();
+//	printPReg(17);
 
+	XTime_GetTime(&tStart);
+	for(int i=0; i<100; i++)
+	{
+		//fill entire preg 9 and then 10 for vector
+		MATRIX_SUBTRACTION(1, 1, 0);
+		SHIFT_SOUTH(9, 0);
+		for(int x=0; x<SPAR_dimension-1; x++)
+		{
+			MATRIX_ADDITION(9, 0, 9);
+			SHIFT_SOUTH(0, 0);
+		}
+		MATRIX_SUBTRACTION(1, 1, 0);
+		SHIFT_SOUTH(10, 0);
+		for(int x=0; x<SPAR_dimension-1; x++)
+		{
+			MATRIX_ADDITION(10, 0, 10);
+			SHIFT_SOUTH(0, 0);
+		}
+
+
+		//Multiply Vector and Matrix
+		ELEMENTWISE_MULTIPLICATION(1, 9, 17);
+		ELEMENTWISE_MULTIPLICATION(2, 10, 18);
+		ELEMENTWISE_MULTIPLICATION(3, 9, 19);
+		ELEMENTWISE_MULTIPLICATION(4, 10, 20);
+		ELEMENTWISE_MULTIPLICATION(5, 9, 21);
+		ELEMENTWISE_MULTIPLICATION(6, 10, 22);
+		ELEMENTWISE_MULTIPLICATION(7, 9, 23);
+		ELEMENTWISE_MULTIPLICATION(8, 10, 24);
+
+		//accumulate
+		SHIFT_WEST(17, 25);
+		//move West Edge from 18 to 25
+		WEST_COLUMN_MOVE(18, 25);
+		SHIFT_WEST(18, 26);
+		SHIFT_WEST(19, 27);
+		//move West Edge from 20 to 27
+		WEST_COLUMN_MOVE(20, 27);
+		SHIFT_WEST(20, 28);
+		SHIFT_WEST(21, 29);
+		//move West Edge from 22 to 29
+		WEST_COLUMN_MOVE(22, 29);
+		SHIFT_WEST(22, 30);
+		SHIFT_WEST(23, 31);
+		//move West Edge from 24 to 31
+		WEST_COLUMN_MOVE(24, 31);
+		SHIFT_WEST(24, 0);
+
+		MATRIX_ADDITION(17, 25, 17);
+		MATRIX_ADDITION(18, 26, 18);
+		MATRIX_ADDITION(19, 27, 19);
+		MATRIX_ADDITION(20, 28, 20);
+		MATRIX_ADDITION(21, 29, 21);
+		MATRIX_ADDITION(22, 30, 22);
+		MATRIX_ADDITION(23, 31, 23);
+		MATRIX_ADDITION(24, 0, 24);
+		for(int x=0; x<colN-2; x++)
+		{
+			SHIFT_WEST(25, 25);
+			//move West Edge from 26 to 25
+			WEST_COLUMN_MOVE(26, 25);
+			SHIFT_WEST(26, 26);
+			SHIFT_WEST(27, 27);
+			//move West Edge from 28 to 27
+			WEST_COLUMN_MOVE(28, 27);
+			SHIFT_WEST(28, 28);
+			SHIFT_WEST(29, 29);
+			//move West Edge from 30 to 29
+			WEST_COLUMN_MOVE(30, 29);
+			SHIFT_WEST(30, 30);
+			SHIFT_WEST(31, 31);
+			//move West Edge from 0 to 31
+			WEST_COLUMN_MOVE(0, 31);
+			SHIFT_WEST(0, 0);
+			//add into result
+			MATRIX_ADDITION(17, 25, 17);
+			MATRIX_ADDITION(18, 26, 18);
+			MATRIX_ADDITION(19, 27, 19);
+			MATRIX_ADDITION(20, 28, 20);
+			MATRIX_ADDITION(21, 29, 21);
+			MATRIX_ADDITION(22, 30, 22);
+			MATRIX_ADDITION(23, 31, 23);
+			MATRIX_ADDITION(24, 0, 24);
+		}
+	}
+	XTime_GetTime(&tEnd);
+	ElapsedTime = (1.0 * (tEnd - tStart) / (COUNTS_PER_SECOND));
+
+	printf("Matrix-Vector Multiplication x100 Time: %lf Seconds\n", ElapsedTime);
 	printf("VM Matrix-Vector Multiplication-------------------------------------------------------\n"); //here
+	Reset_Registers();
 	resetTable(table);
 	Store_M(&matrix1, 1, table);
 	Store_V(&vector1, 2, table);
 	Mul_MV(1,2,3, table); //run it once just to setup the data
-	printTableVReg(table);
-	printTablePReg(table);
+
+
 	ResetCounts();
+	printf("\n\n");
 	Mul_MV(1,2,3, table); //here
 	PrintCounts();
-//	printVReg(1, table);
-//	printVReg(2, table);
-	printVReg(3, table);
 
-//	XTime_GetTime(&tStart);
-//	for(int i=0; i<0; i++)
-//	{
-//		Mul_MV(1,2,3, table); //here
-//	}
-//	XTime_GetTime(&tEnd);
-//	ElapsedTime = (1.0 * (tEnd - tStart) / (COUNTS_PER_SECOND));
-//	printf("Matrix-Vector Multiplication x100 Time: %lf Seconds\n", ElapsedTime);
+	XTime_GetTime(&tStart);
+	for(int i=0; i<100; i++)
+	{
+		Mul_MV(1,2,3, table); //here
+	}
+	XTime_GetTime(&tEnd);
+	ElapsedTime = (1.0 * (tEnd - tStart) / (COUNTS_PER_SECOND));
+	printf("Matrix-Vector Multiplication x100 Time: %lf Seconds\n", ElapsedTime);
 	return 1;
 }

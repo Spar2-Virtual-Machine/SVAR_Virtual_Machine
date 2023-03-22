@@ -1216,14 +1216,18 @@ void Mul_MV(int rs_m, int rs_v, int rd, AllocationTable *table){
 				}
 			}
 			execute(2, table->vreg[temp].placement[i], table->vreg[rs_m].placement[i], (table->vreg[rs_v].placement[i%rs_v_preg_count]));
-			//printf("Multiplying %d and %d to %d\n", table->vreg[rs_m].placement[i], table->vreg[rs_v].placement[i%rs_v_preg_count], table->vreg[temp].placement[i]);
+//			printf("Multiplying %d and %d to %d\n", table->vreg[rs_m].placement[i], table->vreg[rs_v].placement[i%rs_v_preg_count], table->vreg[temp].placement[i]);
 		}
 //		printf("\n J:%d\n", j);
 //		PrintCounts_v();
 	}
-	printVReg(rs_m, table);
-	printVReg(rs_v, table);
-	printVReg(temp, table);
+//	printTableVReg(table);
+//	printPReg(table->vreg[1].placement[0]);
+//	printPReg(table->vreg[2].placement[0]);
+//	printPReg(table->vreg[0].placement[0]);
+//	printVReg(rs_m, table);
+//	printVReg(rs_v, table);
+//	printVReg(temp, table);
 	int old_vdata[SPAR_dimension*SPAR_dimension*8]; //todo: replace with macro or variable
 	int old_vrows = table->vreg[rs_v].rows;
 //	printVReg(rs_v, table);

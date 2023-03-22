@@ -12,7 +12,7 @@
 
 #define Num_VREG 8
 #define Num_PREG 32
-#define Max_PrForVr 8//(Num_PREG/4) //8 //Num_PREG/3
+#define Max_PrForVr 8//(Num_PREG/4) //8 //Num_PREG/4 Just to be safe
 #define VREG_Data_Size 40000 //arbitrarily chosen for now
 
 #define numberofreg 16 //todo-->have this redefined to use a more global variable

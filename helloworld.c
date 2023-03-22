@@ -95,13 +95,12 @@ int main()
 	printf("-------------------------------------------------------------------------\r\n");
 //	printRegFile(0, 0, 0, 0, 32);
 //	MultiplyAccumulateMatrixVectorTest(&allocation_table);
-//	Test_Elementwise_1Segment(&allocation_table);
-//	Test_Elementwise_2Segment(&allocation_table);
-//	Test_Elementwise_4Segment(&allocation_table);
-//	Test_Elementwise_8Segment(&allocation_table);
 //	Test_MulAcc_1Segment(&allocation_table);
+//	Reset_Registers();
 //	Test_MulAcc_2Segment(&allocation_table);
+//	Reset_Registers();
 //	Test_MulAcc_4Segment(&allocation_table);
+	Reset_Registers();
 	Test_MulAcc_8Segment(&allocation_table);
 	return 0;
 }

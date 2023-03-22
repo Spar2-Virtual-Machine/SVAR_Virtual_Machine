@@ -800,6 +800,7 @@ void printVReginPReg(int reg, AllocationTable *table)
 				{
 					t = j-startCol;
 					data[j + i*(colOffset)] = READ_REG((s/(4*Tile_dim))%Array_dim, (t/(4*Tile_dim))%Array_dim, (s/4)%Tile_dim, (t/4)%Tile_dim, ((s*4 +t)%4 + s*4)%16, pRegNum);
+					usleep(1);
 	//				printf("s,t: %d,%d  i,j: %d,%d  x: %d\n", s, t, i, j, data[j + i*colOffset]);
 				}
 			}
@@ -815,6 +816,7 @@ void printVReginPReg(int reg, AllocationTable *table)
 					data[i + j*(table->vreg[reg].cols)] = READ_REG((s/(4*Tile_dim))%Array_dim, (t/(4*Tile_dim))%Array_dim, (s/4)%Tile_dim, (t/4)%Tile_dim, ((s*4 +t)%4 + s*4)%16, pRegNum);
 					//WRITE_REG((s/(4*Tile_dim))%Array_dim, (t/(4*Tile_dim))%Array_dim, (s/4)%Tile_dim, (t/4)%Tile_dim, ((s*4 +t)%4 + s*4)%16, pRegNum, table->vreg[vRegNum].data[j + i*(table->vreg[vRegNum].cols)]);
 	//				printf("s,t: %d,%d  i,j: %d,%d  x: %d\n", s, t, i, j, data[j + i*colOffset]);
+					usleep(1);
 				}
 			}
 		}
@@ -827,6 +829,7 @@ void printVReginPReg(int reg, AllocationTable *table)
 			for(int j=0; j < table->vreg[reg].cols; j++)
 			{
 				printf("%d, ", data[j + i*(table->vreg[reg].cols)]);
+				usleep(1);
 			}
 			printf("\n");
 		}
@@ -839,6 +842,7 @@ void printVReginPReg(int reg, AllocationTable *table)
 			for(int j=0; j < table->vreg[reg].rows; j++)
 			{
 				printf("%d, ", data[i + j*(table->vreg[reg].cols)]);
+				usleep(1);
 			}
 			printf("\n");
 		}
