@@ -1613,8 +1613,8 @@ int Test_MulAcc_1Segment(AllocationTable *table){
 	WRITE_Matrix(rowN, colN, arr1, 1, 1); //store the matrix
 	MATRIX_SUBTRACTION(1, 1, 9);
 	WRITE_Matrix(1, colN, arr2, 9, 1); //store the vector
-	ResetCounts();
 
+	ResetCounts();
 	//fill entire preg for vector
 	//clear preg 0
 	MATRIX_SUBTRACTION(1, 1, 0);
@@ -1639,6 +1639,7 @@ int Test_MulAcc_1Segment(AllocationTable *table){
 		MATRIX_ADDITION(17, 25, 17);
 	}
 	PrintCounts();
+//	printPReg(17);
 
 	//get time for 100 iterations
 	XTime_GetTime(&tStart);
@@ -1678,6 +1679,7 @@ int Test_MulAcc_1Segment(AllocationTable *table){
 	Store_M(&matrix1, 1, table);
 	Store_V(&vector1, 2, table);
 	Mul_MV(1,2,3, table); //run it once just to setup the data
+//	printVReg(3, table); //print function for testing result
 
 	ResetCounts();
 	Mul_MV(1,2,3, table); //here
@@ -1765,6 +1767,8 @@ int Test_MulAcc_2Segment(AllocationTable *table){
 		MATRIX_ADDITION(18, 26, 18);	
 	}
 	PrintCounts();
+//	printPReg(17);
+//	printPReg(18);
 
 	XTime_GetTime(&tStart);
 	for(int i=0; i<100; i++)
@@ -1806,6 +1810,7 @@ int Test_MulAcc_2Segment(AllocationTable *table){
 	Store_M(&matrix1, 1, table);
 	Store_V(&vector1, 2, table);
 	Mul_MV(1,2,3, table); //run it once just to load the data into spar. This will eliminate initial loading times
+//	printVReg(3, table);
 
 	ResetCounts();
 	Mul_MV(1,2,3, table); //here
@@ -1888,13 +1893,13 @@ int Test_MulAcc_2Segment_T(AllocationTable *table){
 	//Multiply Vector and Matrix
 	ELEMENTWISE_MULTIPLICATION(1, 9, 17);
 	ELEMENTWISE_MULTIPLICATION(2, 10, 18);
+
 	//shift into the temp register 0
 	SHIFT_WEST(17, 25);
 	WEST_COLUMN_MOVE(18,25);
 	SHIFT_WEST(18, 26);
 	MATRIX_ADDITION(17, 25, 17);
 	MATRIX_ADDITION(18, 26, 18);
-
 	//accumulate
 	for(int x=0; x<colN-2; x++)
 	{
@@ -1906,6 +1911,9 @@ int Test_MulAcc_2Segment_T(AllocationTable *table){
 		MATRIX_ADDITION(18, 26, 18);
 	}
 	PrintCounts();
+//	printPReg(17);
+//	printf("\n--\n");
+//	printPReg(18);
 
 	XTime_GetTime(&tStart);
 	for(int i=0; i<100; i++)
@@ -1970,6 +1978,7 @@ int Test_MulAcc_2Segment_T(AllocationTable *table){
 	XTime_GetTime(&tEnd);
 	ElapsedTime = (1.0 * (tEnd - tStart) / (COUNTS_PER_SECOND));
 	printf("Matrix-Vector Multiplication x100 Time: %lf Seconds\n", ElapsedTime);
+
 	return 1;
 }
 
@@ -2142,11 +2151,11 @@ int Test_MulAcc_4Segment(AllocationTable *table){
 	Store_M(&matrix1, 1, table);
 	Store_V(&vector1, 2, table);
 	Mul_MV(1,2,3, table); //run it once just to setup the data
-
+	//	printVReg(3, table);
 	ResetCounts();
 	Mul_MV(1,2,3, table); //here
 	PrintCounts();
-//	printVReg(3, table);
+
 
 	XTime_GetTime(&tStart);
 	for(int i=0; i<100; i++)
@@ -2294,6 +2303,13 @@ int Test_MulAcc_8Segment(AllocationTable *table){
 	}
 	PrintCounts();
 //	printPReg(17);
+//	printf("\n--\n");
+//	printPReg(19);
+//	printf("\n--\n");
+//	printPReg(21);
+//	printf("\n--\n");
+//	printPReg(23);
+//	printf("\n--\n");
 
 	XTime_GetTime(&tStart);
 	for(int i=0; i<100; i++)
@@ -2390,6 +2406,7 @@ int Test_MulAcc_8Segment(AllocationTable *table){
 	Store_M(&matrix1, 1, table);
 	Store_V(&vector1, 2, table);
 	Mul_MV(1,2,3, table); //run it once just to setup the data
+//	printVReg(3, table);
 
 
 	ResetCounts();
@@ -2490,8 +2507,6 @@ int Test_MulAcc_8Segment_T(AllocationTable *table){
 		SHIFT_SOUTH(0, 0);
 	}
 
-
-
 	//Multiply Vector and Matrix
 	ELEMENTWISE_MULTIPLICATION(1, 9, 17);
 	ELEMENTWISE_MULTIPLICATION(2, 10, 18);
@@ -2501,8 +2516,7 @@ int Test_MulAcc_8Segment_T(AllocationTable *table){
 	ELEMENTWISE_MULTIPLICATION(6, 10, 22);
 	ELEMENTWISE_MULTIPLICATION(7, 11, 23);
 	ELEMENTWISE_MULTIPLICATION(8, 12, 24);
-
-	//accumulate
+	//Accumulate the products
 	SHIFT_WEST(17, 25);
 	WEST_COLUMN_MOVE(18, 25);
 	SHIFT_WEST(18, 26);
@@ -2513,7 +2527,7 @@ int Test_MulAcc_8Segment_T(AllocationTable *table){
 	SHIFT_WEST(21, 29);
 	WEST_COLUMN_MOVE(22,29);
 	SHIFT_WEST(22, 30);
-	WEST_COLUMN_MOVE(23,29);
+	WEST_COLUMN_MOVE(23,30);
 	SHIFT_WEST(23, 31);
 	WEST_COLUMN_MOVE(24,31);
 	SHIFT_WEST(24, 0);
@@ -2587,8 +2601,6 @@ int Test_MulAcc_8Segment_T(AllocationTable *table){
 			SHIFT_SOUTH(0, 0);
 		}
 
-
-
 		//Multiply Vector and Matrix
 		ELEMENTWISE_MULTIPLICATION(1, 9, 17);
 		ELEMENTWISE_MULTIPLICATION(2, 10, 18);
@@ -2598,8 +2610,7 @@ int Test_MulAcc_8Segment_T(AllocationTable *table){
 		ELEMENTWISE_MULTIPLICATION(6, 10, 22);
 		ELEMENTWISE_MULTIPLICATION(7, 11, 23);
 		ELEMENTWISE_MULTIPLICATION(8, 12, 24);
-
-		//accumulate
+		//Accumulate the products
 		SHIFT_WEST(17, 25);
 		WEST_COLUMN_MOVE(18, 25);
 		SHIFT_WEST(18, 26);
@@ -2610,7 +2621,7 @@ int Test_MulAcc_8Segment_T(AllocationTable *table){
 		SHIFT_WEST(21, 29);
 		WEST_COLUMN_MOVE(22,29);
 		SHIFT_WEST(22, 30);
-		WEST_COLUMN_MOVE(23,29);
+		WEST_COLUMN_MOVE(23,30);
 		SHIFT_WEST(23, 31);
 		WEST_COLUMN_MOVE(24,31);
 		SHIFT_WEST(24, 0);
@@ -2660,10 +2671,9 @@ int Test_MulAcc_8Segment_T(AllocationTable *table){
 	Store_M(&matrix1, 1, table);
 	Store_V(&vector1, 2, table);
 	Mul_MV(1,2,3, table); //run it once just to setup the data
-
+	// printVReg(3, table);
 
 	ResetCounts();
-	printf("\n\n");
 	Mul_MV(1,2,3, table); //here
 	PrintCounts();
 

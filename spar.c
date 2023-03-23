@@ -309,8 +309,10 @@ void WRITE_Matrix_Large(int row, int col, int block_row, int block_col, int row_
 	{
 		for( s = row_blk_size * block_row; s < ((block_row + 1) * row_blk_size); s++)
 		{
+			if(s >= row){break;}
 			for( t = col_blk_size * block_col; t < ((block_col + 1) * col_blk_size); t++)
 			{
+				if(t >= col){break;}
 				ss = s - (row_blk_size * block_row);
 				tt = t - (col_blk_size * block_col);
 				WRITE_REG(ss/(4 * Tile_dim), tt/(4 * Tile_dim), (ss/4)%Tile_dim, (tt/4)%Tile_dim, ((ss*4+tt)%4+ss*4)%16, reg, W[s][t]);
@@ -321,8 +323,10 @@ void WRITE_Matrix_Large(int row, int col, int block_row, int block_col, int row_
 	{
 		for( t = row_blk_size * block_row; t < ((block_row + 1) * row_blk_size); t++)
 		{
+			if(t >= row){break;}
 			for( s = col_blk_size * block_col; s < ((block_col + 1) * col_blk_size); s++)
 			{
+				if(s >= col){break;}
 				tt = t - (row_blk_size * block_row);
 				ss = s - (col_blk_size * block_col);
 				WRITE_REG(ss/(4 * Tile_dim), tt/(4 * Tile_dim), (ss/4)%Tile_dim, (tt/4)%Tile_dim, ((ss*4+tt)%4+ss*4)%16, reg, W[t][s]);
@@ -333,8 +337,10 @@ void WRITE_Matrix_Large(int row, int col, int block_row, int block_col, int row_
 	{
 		for( s = row_blk_size * block_row; s < ((block_row + 1) * row_blk_size); s++)
 		{
+			if(s >= row){break;}
 			for( t = col_blk_size * block_col; t < col; t++)
 			{
+				if(t >= col){break;}
 				ss = s - (row_blk_size * block_row);
 				tt = t - (col_blk_size * block_col);
 				WRITE_REG(ss/(4 * Tile_dim), Array_dim-1, (ss/4)%Tile_dim, Tile_dim-1, (ss*4+3)%16, reg, W[s][t]);
@@ -346,8 +352,10 @@ void WRITE_Matrix_Large(int row, int col, int block_row, int block_col, int row_
 	{
 		for( s = row_blk_size * block_row; s < ((block_row + 1) * row_blk_size); s++)
 		{
+			if(s >= row){break;}
 			for( t = col_blk_size * block_col; t < col; t++)
 			{
+				if(t >= col){break;}
 				ss = s - (row_blk_size * block_row);
 				tt = t - (col_blk_size * block_col);
 				WRITE_REG(0, ss/Array_dim, 0, (ss/4)%Tile_dim, ss%4, reg, W[s][t]);
@@ -358,8 +366,10 @@ void WRITE_Matrix_Large(int row, int col, int block_row, int block_col, int row_
 	{
 		for( s = row_blk_size * block_row; s < ((block_row + 1) * row_blk_size); s++)
 		{
+			if(s >= row){break;}
 			for( t = col_blk_size * block_col; t < col; t++)
 			{
+				if(t >= col){break;}
 				ss = s - (row_blk_size * block_row);
 				tt = t - (col_blk_size * block_col);
 				WRITE_REG(ss/(4 * Tile_dim), Array_dim-1, (ss/4)%Tile_dim, Tile_dim-1, (ss*4+3)%16, reg, W[s][t]);

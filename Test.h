@@ -26,8 +26,8 @@
 #include "AllocationTable.h"
 #include "virt.h"
 #include "xtime_l.h"
-
-//used just to test things are working correctly
+//NOTE: The returned integers don't mean anything
+//used just to test things are working correctly by messing with sizes, values, etc.
 void MultiplyMV(int matrix[], int vector[], int rows, int cols, int result[]);
 int TestShiftNorth(AllocationTable *table);
 int TestShiftSouth(AllocationTable *table);
@@ -53,7 +53,9 @@ int Test_Elementwise_8Segment(AllocationTable *table);
 
 int Test_MulAcc_1Segment(AllocationTable *table);
 int Test_MulAcc_2Segment(AllocationTable *table);
+int Test_MulAcc_2Segment_T(AllocationTable *table);
 int Test_MulAcc_4Segment(AllocationTable *table);
 int Test_MulAcc_8Segment(AllocationTable *table);
+int Test_MulAcc_8Segment_T(AllocationTable *table);
 
 #endif /* SRC_TEST_H_ */

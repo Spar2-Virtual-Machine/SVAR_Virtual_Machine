@@ -20,5 +20,7 @@
 #include "xtime_l.h"
 
 void MLP_VM_For64x64_Count(AllocationTable *table);
+void MLP_VM_For64x64_Time(AllocationTable *table);
 void MLP_Native_For64x64_Count(AllocationTable *table);
+void MLP_Native_For64x64_Time(AllocationTable *table);
 #endif

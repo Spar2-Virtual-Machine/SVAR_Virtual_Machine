@@ -95,15 +95,26 @@ int main()
 	xil_printf("RESET REGISTERS IS DONE! \n");
 	printf("-------------------------------------------------------------------------\r\n");
 //	printRegFile(0, 0, 0, 0, 32);
-//	MultiplyAccumulateMatrixVectorTest(&allocation_table);
+//	Reset_Registers();
 //	Test_MulAcc_1Segment(&allocation_table);
 //	Reset_Registers();
 //	Test_MulAcc_2Segment(&allocation_table);
 //	Reset_Registers();
+//	Test_MulAcc_2Segment_T(&allocation_table);
+//	Reset_Registers();
 //	Test_MulAcc_4Segment(&allocation_table);
-	MLP_VM_For64x64_Count(&allocation_table);
+//	Reset_Registers();
+//	Test_MulAcc_8Segment(&allocation_table);
+//	Reset_Registers();
+//	Test_MulAcc_8Segment_T(&allocation_table);
+
 	Reset_Registers();
 	MLP_Native_For64x64_Count(&allocation_table);
-
+	Reset_Registers();
+	MLP_Native_For64x64_Time(&allocation_table);
+	Reset_Registers();
+	MLP_VM_For64x64_Count(&allocation_table);
+	Reset_Registers();
+	MLP_VM_For64x64_Time(&allocation_table);
 	return 0;
 }
