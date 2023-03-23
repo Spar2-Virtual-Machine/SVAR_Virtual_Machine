@@ -823,8 +823,8 @@ int Test_Elementwise_1Segment(AllocationTable *table){
 	{
 		for(int j=0; j < colN; j++)
 		{
-			arr1[i][j] = j+256+(4*i);
-			arr2[i][j] = (2)<<16;
+			arr1[i][j] = 16*j+256+(4*i);
+			arr2[i][j] = (2)<<14;
 		}
 	}
 	Matrix matrix1, matrix2;
@@ -836,7 +836,7 @@ int Test_Elementwise_1Segment(AllocationTable *table){
 	matrix2.memory=(int*)&arr2;
 
 
-
+	printf("Native Matrix Addition---------------------------------------------------\n");
 	//addition
 	//void WRITE_Matrix_Large(int row, int col, int block_row, int block_col, int row_blk_size, int col_blk_size, int W[][col], int reg, int copy, int block_dimension){
 	WRITE_Matrix_Large(rowN, colN, 0, 0, 64, 64, arr1, 1, 1, 0); //copy=1 for 2d array //goes into preg 1
@@ -844,7 +844,6 @@ int Test_Elementwise_1Segment(AllocationTable *table){
 
 	ResetCounts();
 	MATRIX_ADDITION(1,2,3);
-	printf("Native Matrix Addition---------------------------------------------------\n");
 	PrintCounts();
 //	printPReg(3);
 
@@ -886,12 +885,14 @@ int Test_Elementwise_1Segment(AllocationTable *table){
 
 	//subtraction-------------WRITE_Matrix_Large(0, 0, 0, 0, 64, 64, arr1, 1, 1, 0); //copy=1 for 2d array //goes into preg 1
 	printf("/////////////////////////Subtraction---------------------------------------------------\n");
-	WRITE_Matrix_Large(0, 0, 0, 0, 64, 64, arr2, 2, 1, 0); //goes into preg 2.
+	WRITE_Matrix_Large(rowN, colN, 0, 0, 64, 64, arr1, 1, 1, 0); //copy=1 for 2d array //goes into preg 1
+	WRITE_Matrix_Large(rowN, colN, 0, 0, 64, 64, arr2, 2, 1, 0); //goes into preg 2.
 
 	ResetCounts();
 	MATRIX_SUBTRACTION(1,2,3);
 	printf("Native Matrix Subtraction---------------------------------------------------\n");
 	PrintCounts();
+//	printPReg(3);
 	XTime_GetTime(&tStart);
 	for(int i=0; i<100; i++)
 	{
@@ -925,12 +926,14 @@ int Test_Elementwise_1Segment(AllocationTable *table){
 
 	//Multiplication_E-------------WRITE_Matrix_Large(0, 0, 0, 0, 64, 64, arr1, 1, 1, 0); //copy=1 for 2d array //goes into preg 1
 	printf("/////////////////////////Multiplication_E---------------------------------------------------\n");
-	WRITE_Matrix_Large(0, 0, 0, 0, 64, 64, arr2, 2, 1, 0); //goes into preg 2.
+	WRITE_Matrix_Large(rowN, colN, 0, 0, 64, 64, arr1, 1, 1, 0); //copy=1 for 2d array //goes into preg 1
+	WRITE_Matrix_Large(rowN, colN, 0, 0, 64, 64, arr2, 2, 1, 0); //goes into preg 2.
 
 	ResetCounts();
 	ELEMENTWISE_MULTIPLICATION(1,2,3); //here
 	printf("Native Matrix Multiplication---------------------------------------------------\n");
 	PrintCounts();
+//	printPReg(3);
 	XTime_GetTime(&tStart);
 	for(int i=0; i<100; i++)
 	{
@@ -980,8 +983,8 @@ int Test_Elementwise_2Segment(AllocationTable *table){
 	{
 		for(int j=0; j < colN; j++)
 		{
-			arr1[i][j] = j+256+(4*i);
-			arr2[i][j] = (2)<<16;
+			arr1[i][j] = 16*j+256+(4*i);
+			arr2[i][j] = (2)<<14;
 		}
 	}
 	Matrix matrix1, matrix2;
@@ -1008,6 +1011,8 @@ int Test_Elementwise_2Segment(AllocationTable *table){
 	MATRIX_ADDITION(2,4,6);
 	printf("Native Matrix Addition---------------------------------------------------\n");
 	PrintCounts();
+//	printPReg(5);
+//	printPReg(6);
 
 
 	XTime_GetTime(&tStart);
@@ -1054,6 +1059,8 @@ int Test_Elementwise_2Segment(AllocationTable *table){
 	MATRIX_SUBTRACTION(2,4,6); //here
 	printf("Native Matrix Subtraction---------------------------------------------------\n"); //here
 	PrintCounts();
+//	printPReg(5);
+//	printPReg(6);
 
 
 	XTime_GetTime(&tStart);
@@ -1100,7 +1107,8 @@ int Test_Elementwise_2Segment(AllocationTable *table){
 	ELEMENTWISE_MULTIPLICATION(2,4,6); //here
 	printf("Native Matrix Multiplication---------------------------------------------------\n"); //here
 	PrintCounts();
-
+//	printPReg(5);
+//	printPReg(6);
 
 	XTime_GetTime(&tStart);
 	for(int i=0; i<100; i++)
@@ -1121,6 +1129,7 @@ int Test_Elementwise_2Segment(AllocationTable *table){
 	ResetCounts();
 	E_Mul_MM(1,2,3, table); //here
 	PrintCounts();
+//	printVReg(3, table);
 
 	XTime_GetTime(&tStart);
 	for(int i=0; i<100; i++)
@@ -1151,8 +1160,8 @@ int Test_Elementwise_4Segment(AllocationTable *table){
 	{
 		for(int j=0; j < colN; j++)
 		{
-			arr1[i][j] = j+256+(4*i);
-			arr2[i][j] = (2)<<16;
+			arr1[i][j] = 16*j+256+(4*i);
+			arr2[i][j] = (2)<<14;
 		}
 	}
 	Matrix matrix1, matrix2;
@@ -1185,6 +1194,8 @@ int Test_Elementwise_4Segment(AllocationTable *table){
 	MATRIX_ADDITION(4,10,18);
 	printf("Native Matrix Addition---------------------------------------------------\n");
 	PrintCounts();
+//	printPReg(15);
+//	printPReg(18);
 
 
 	XTime_GetTime(&tStart);
@@ -1240,7 +1251,8 @@ int Test_Elementwise_4Segment(AllocationTable *table){
 	MATRIX_SUBTRACTION(4,10,18);
 	printf("Native Matrix Subtraction---------------------------------------------------\n"); //here
 	PrintCounts();
-
+//	printPReg(15);
+//	printPReg(18);
 
 	XTime_GetTime(&tStart);
 	for(int i=0; i<100; i++)
@@ -1295,7 +1307,8 @@ int Test_Elementwise_4Segment(AllocationTable *table){
 	ELEMENTWISE_MULTIPLICATION(4,10,18);
 	printf("Native Matrix Multiplication---------------------------------------------------\n"); //here
 	PrintCounts();
-
+//	printPReg(15);
+//	printPReg(18);
 
 	XTime_GetTime(&tStart);
 	for(int i=0; i<100; i++)
@@ -1309,7 +1322,7 @@ int Test_Elementwise_4Segment(AllocationTable *table){
 	ElapsedTime = (1.0 * (tEnd - tStart) / (COUNTS_PER_SECOND));
 	printf("Multiplication x100 Time: %lf Seconds\n", ElapsedTime);
 
-	printf("VM Matrix Subtraction-------------------------------------------------------\n"); //here
+	printf("VM Matrix Multiplication-------------------------------------------------------\n"); //here
 	resetTable(table);
 	Store_M(&matrix1, 1, table);
 	Store_M(&matrix2, 2, table);
@@ -1318,6 +1331,7 @@ int Test_Elementwise_4Segment(AllocationTable *table){
 	ResetCounts();
 	E_Mul_MM(1,2,3, table); //here
 	PrintCounts();
+//	printVReg(3, table);
 
 	XTime_GetTime(&tStart);
 	for(int i=0; i<100; i++)
@@ -1348,8 +1362,8 @@ int Test_Elementwise_8Segment(AllocationTable *table){
 	{
 		for(int j=0; j < colN; j++)
 		{
-			arr1[i][j] = j+256+(4*i);
-			arr2[i][j] = (2)<<16;
+			arr1[i][j] = 16*j+256+(4*i);
+			arr2[i][j] = (2)<<14;
 		}
 	}
 	Matrix matrix1, matrix2;
@@ -1423,7 +1437,6 @@ int Test_Elementwise_8Segment(AllocationTable *table){
 	ResetCounts();
 	E_Add_MM(1,2,3, table);
 	PrintCounts();
-//	printVReg(3, table);
 
 	XTime_GetTime(&tStart);
 	for(int i=0; i<100; i++)
@@ -1467,7 +1480,6 @@ int Test_Elementwise_8Segment(AllocationTable *table){
 	MATRIX_SUBTRACTION(8, 16, 24);
 	printf("Native Matrix Subtraction---------------------------------------------------\n"); //here
 	PrintCounts();
-
 
 	XTime_GetTime(&tStart);
 	for(int i=0; i<100; i++)
@@ -1565,6 +1577,7 @@ int Test_Elementwise_8Segment(AllocationTable *table){
 	ResetCounts();
 	E_Mul_MM(1,2,3, table); //here
 	PrintCounts();
+//	printVReg(3,table);
 
 	XTime_GetTime(&tStart);
 	for(int i=0; i<100; i++)

@@ -94,7 +94,14 @@ int main()
 	Reset_Registers();
 	xil_printf("RESET REGISTERS IS DONE! \n");
 	printf("-------------------------------------------------------------------------\r\n");
-//	printRegFile(0, 0, 0, 0, 32);
+//	Reset_Registers();
+//	Test_Elementwise_1Segment(&allocation_table);
+//	Reset_Registers();
+//	Test_Elementwise_2Segment(&allocation_table);
+//	Reset_Registers();
+//	Test_Elementwise_4Segment(&allocation_table);
+//	Reset_Registers();
+//	Test_Elementwise_8Segment(&allocation_table);
 //	Reset_Registers();
 //	Test_MulAcc_1Segment(&allocation_table);
 //	Reset_Registers();
@@ -108,13 +115,13 @@ int main()
 //	Reset_Registers();
 //	Test_MulAcc_8Segment_T(&allocation_table);
 
-	Reset_Registers();
-	MLP_Native_For64x64_Count(&allocation_table);
-	Reset_Registers();
-	MLP_Native_For64x64_Time(&allocation_table);
-	Reset_Registers();
-	MLP_VM_For64x64_Count(&allocation_table);
-	Reset_Registers();
-	MLP_VM_For64x64_Time(&allocation_table);
+//	Reset_Registers();
+//	MLP_Native_For64x64_Count(&allocation_table);
+//	Reset_Registers();
+//	MLP_Native_For64x64_Time(&allocation_table);
+//	Reset_Registers();
+//	MLP_VM_For64x64_Count(&allocation_table);
+//	Reset_Registers();
+//	MLP_VM_For64x64_Time(&allocation_table);
 	return 0;
 }
