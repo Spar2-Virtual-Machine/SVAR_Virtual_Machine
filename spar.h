@@ -40,6 +40,7 @@ void SHIFT_SOUTH(int rs, int rd);
 void SHIFT_EAST(int rs, int rd);
 void SHIFT_WEST(int rs, int rd);
 void WEST_COLUMN_MOVE(int rs, int rd);
+void NORTH_COLUMN_MOVE(int rs, int rd);
 void MATRIX_ADDITION(int matrixA_reg, int matrixB_reg, int Result_Reg);
 void MATRIX_SUBTRACTION(int matrixA_reg, int matrixB_reg, int Result_Reg);
 void MATRIX_MULTIPLICATION(int matrixA_reg, int matrixB_reg, int Result_Reg, int matrixA_col, int block_dimension);

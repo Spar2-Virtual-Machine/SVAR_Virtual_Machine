@@ -24,6 +24,8 @@ void PrepareReg_Mul_MVM(int rsm, int rsv, int rd, AllocationTable *table);//prep
 //Primitive functions.
 void Declare_M(Matrix *m, int rows, int cols);
 void Declare_V(Vector *v, int size);
+void Set_M_Data(Matrix *m, int *data);
+void Set_V_Data(Vector *v, int *data);
 void Deallocate_M(Matrix *m);
 void Deallocate_V(Vector *v);
 

@@ -1823,6 +1823,155 @@ int Test_MulAcc_2Segment(AllocationTable *table){
 
 	return 1;
 }
+int Test_MulAcc_2Segment_T(AllocationTable *table){
+	printf("\n2 Segment MV Multiply Accumulate\n");
+	//time variable
+	XTime tStart, tEnd;
+	double ElapsedTime;
+
+	//define sample data
+	int rowN = 64;
+	int colN = 128;
+	int arr1[rowN][colN];
+	int arr2[rowN][colN];
+	for(int i=0; i < rowN; i++)
+	{
+		for(int j=0; j < colN; j++)
+		{
+			arr1[i][j] = 2*j+256+(4*i);
+			arr2[i][j] = (2)<<14;
+		}
+	}
+	Matrix matrix1, matrix2;
+	Vector vector1;
+	Declare_M(&matrix1, rowN, colN);
+	Declare_M(&matrix2, rowN, colN);
+	Declare_V(&vector1, colN);
+	free(matrix1.memory);
+	free(matrix2.memory);
+	free(vector1.memory);
+	matrix1.memory=(int*)&arr1;
+	matrix2.memory=(int*)&arr2;
+	vector1.memory=(int*)&arr2;
+	//Native approach
+	//void WRITE_Matrix(int row, int col, int W[][col], int reg, int copy);
+	printf("Native Matrix-Vector Multiplication-------------------------------------------------------\n");
+	WRITE_Matrix(rowN, colN, arr1, 1, 1); //store the matrix
+	WRITE_Matrix_Large(rowN, colN, 0, 0, 64, 64, arr1, 1, 1, 0); //copy=1 for 2d array //goes into preg 1
+	WRITE_Matrix_Large(rowN, colN, 0, 1, 64, 64, arr1, 2, 1, 0); //copy=1 for 2d array //goes into preg 2
+
+	//store vector
+	//could have used subtraction method, but this is just for clearing the pregisters. Not timeed or anything.
+	execute(1, 9, 1, 1);
+	execute(1, 10, 1, 1);
+	WRITE_Matrix_Large(1, colN, 0, 0, 1, 64, arr2, 9, 1, 0); //goes into preg9
+	//WRITE_Matrix_Large(int row, int col, int block_row, int block_col, int row_blk_size, int col_blk_size, int W[][col], int reg, int copy, int block_dimension)
+	WRITE_Matrix_Large(1, colN, 0, 1, 1, 64, arr2, 10, 1, 0);
+	ResetCounts();
+
+	//fill entire preg 9 then preg10 for vector
+	MATRIX_SUBTRACTION(1, 1, 0);
+	SHIFT_SOUTH(9, 0);
+	for(int x=0; x<SPAR_dimension-1; x++)
+	{
+		MATRIX_ADDITION(9, 0, 9);
+		SHIFT_SOUTH(0, 0);
+	}
+	MATRIX_SUBTRACTION(1, 1, 0);
+	SHIFT_SOUTH(10, 0);
+	for(int x=0; x<SPAR_dimension-1; x++)
+	{
+		MATRIX_ADDITION(10, 0, 10);
+		SHIFT_SOUTH(0, 0);
+	}
+
+	//Multiply Vector and Matrix
+	ELEMENTWISE_MULTIPLICATION(1, 9, 17);
+	ELEMENTWISE_MULTIPLICATION(2, 10, 18);
+	//shift into the temp register 0
+	SHIFT_WEST(17, 25);
+	WEST_COLUMN_MOVE(18,25);
+	SHIFT_WEST(18, 26);
+	MATRIX_ADDITION(17, 25, 17);
+	MATRIX_ADDITION(18, 26, 18);
+
+	//accumulate
+	for(int x=0; x<colN-2; x++)
+	{
+		SHIFT_WEST(25, 25);
+		WEST_COLUMN_MOVE(26,25);
+		SHIFT_WEST(26, 26);
+		//add into result
+		MATRIX_ADDITION(17, 25, 17);
+		MATRIX_ADDITION(18, 26, 18);
+	}
+	PrintCounts();
+
+	XTime_GetTime(&tStart);
+	for(int i=0; i<100; i++)
+	{
+		//fill entire preg 9 then preg10 for vector
+		MATRIX_SUBTRACTION(1, 1, 0);
+		SHIFT_SOUTH(9, 0);
+		for(int x=0; x<SPAR_dimension-1; x++)
+		{
+			MATRIX_ADDITION(9, 0, 9);
+			SHIFT_SOUTH(0, 0);
+		}
+		MATRIX_SUBTRACTION(1, 1, 0);
+		SHIFT_SOUTH(10, 0);
+		for(int x=0; x<SPAR_dimension-1; x++)
+		{
+			MATRIX_ADDITION(10, 0, 10);
+			SHIFT_SOUTH(0, 0);
+		}
+
+		//Multiply Vector and Matrix
+		ELEMENTWISE_MULTIPLICATION(1, 9, 17);
+		ELEMENTWISE_MULTIPLICATION(2, 10, 18);
+		//shift into the temp register 0
+		SHIFT_WEST(17, 25);
+		WEST_COLUMN_MOVE(18,25);
+		SHIFT_WEST(18, 26);
+		MATRIX_ADDITION(17, 25, 17);
+		MATRIX_ADDITION(18, 26, 18);
+
+		//accumulate
+		for(int x=0; x<colN-2; x++)
+		{
+			SHIFT_WEST(25, 25);
+			WEST_COLUMN_MOVE(26,25);
+			SHIFT_WEST(26, 26);
+			//add into result
+			MATRIX_ADDITION(17, 25, 17);
+			MATRIX_ADDITION(18, 26, 18);
+		}
+	}
+	XTime_GetTime(&tEnd);
+	ElapsedTime = (1.0 * (tEnd - tStart) / (COUNTS_PER_SECOND));
+	printf("Matrix-Vector Multiplication x100 Time: %lf Seconds\n", ElapsedTime);
+
+	printf("VM Matrix-Vector Multiplication-------------------------------------------------------\n"); //here
+	resetTable(table);
+	Store_M(&matrix1, 1, table);
+	Store_V(&vector1, 2, table);
+	Mul_MV(1,2,3, table); //run it once just to setup the data
+
+	ResetCounts();
+	Mul_MV(1,2,3, table); //here
+	PrintCounts();
+//	printVReg(3, table);
+
+	XTime_GetTime(&tStart);
+	for(int i=0; i<100; i++)
+	{
+		Mul_MV(1,2,3, table); //here
+	}
+	XTime_GetTime(&tEnd);
+	ElapsedTime = (1.0 * (tEnd - tStart) / (COUNTS_PER_SECOND));
+	printf("Matrix-Vector Multiplication x100 Time: %lf Seconds\n", ElapsedTime);
+	return 1;
+}
 
 int Test_MulAcc_4Segment(AllocationTable *table){
 	printf("\n4 Segment MV Multiply Accumulate\n");
@@ -2218,6 +2367,276 @@ int Test_MulAcc_8Segment(AllocationTable *table){
 			SHIFT_WEST(30, 30);
 			SHIFT_WEST(31, 31);
 			//move West Edge from 0 to 31
+			WEST_COLUMN_MOVE(0, 31);
+			SHIFT_WEST(0, 0);
+			//add into result
+			MATRIX_ADDITION(17, 25, 17);
+			MATRIX_ADDITION(18, 26, 18);
+			MATRIX_ADDITION(19, 27, 19);
+			MATRIX_ADDITION(20, 28, 20);
+			MATRIX_ADDITION(21, 29, 21);
+			MATRIX_ADDITION(22, 30, 22);
+			MATRIX_ADDITION(23, 31, 23);
+			MATRIX_ADDITION(24, 0, 24);
+		}
+	}
+	XTime_GetTime(&tEnd);
+	ElapsedTime = (1.0 * (tEnd - tStart) / (COUNTS_PER_SECOND));
+
+	printf("Matrix-Vector Multiplication x100 Time: %lf Seconds\n", ElapsedTime);
+	printf("VM Matrix-Vector Multiplication-------------------------------------------------------\n"); //here
+	Reset_Registers();
+	resetTable(table);
+	Store_M(&matrix1, 1, table);
+	Store_V(&vector1, 2, table);
+	Mul_MV(1,2,3, table); //run it once just to setup the data
+
+
+	ResetCounts();
+	printf("\n\n");
+	Mul_MV(1,2,3, table); //here
+	PrintCounts();
+
+	XTime_GetTime(&tStart);
+	for(int i=0; i<100; i++)
+	{
+		Mul_MV(1,2,3, table); //here
+	}
+	XTime_GetTime(&tEnd);
+	ElapsedTime = (1.0 * (tEnd - tStart) / (COUNTS_PER_SECOND));
+	printf("Matrix-Vector Multiplication x100 Time: %lf Seconds\n", ElapsedTime);
+	return 1;
+}
+int Test_MulAcc_8Segment_T(AllocationTable *table){
+	printf("\n8 Segment MV Multiply Accumulate\n");
+	//time variable
+	XTime tStart, tEnd;
+	double ElapsedTime;
+
+	//define sample data
+	int rowN = 128;
+	int colN = 256;
+	int arr1[rowN][colN];
+	int arr2[rowN][colN];
+	for(int i=0; i < rowN; i++)
+	{
+		for(int j=0; j < colN; j++)
+		{
+			arr1[i][j] = 2*j+256+(4*i);
+			arr2[i][j] = (2)<<14;
+		}
+	}
+	Matrix matrix1, matrix2;
+	Vector vector1;
+	Declare_M(&matrix1, rowN, colN);
+	Declare_M(&matrix2, rowN, colN);
+	Declare_V(&vector1, colN);
+	free(matrix1.memory);
+	free(matrix2.memory);
+	free(vector1.memory);
+	matrix1.memory=(int*)&arr1;
+	matrix2.memory=(int*)&arr2;
+	vector1.memory=(int*)&arr2;
+	//Native approach
+	//void WRITE_Matrix(int row, int col, int W[][col], int reg, int copy);
+	printf("Native Matrix-Vector Multiplication-------------------------------------------------------\n");
+	WRITE_Matrix_Large(rowN, colN, 0, 0, 64, 64, arr1, 1, 1, 0); //copy=1 for 2d array //goes into preg 1
+	WRITE_Matrix_Large(rowN, colN, 0, 1, 64, 64, arr1, 2, 1, 0); //copy=1 for 2d array //goes into preg 2
+	WRITE_Matrix_Large(rowN, colN, 0, 2, 64, 64, arr1, 3, 1, 0); //copy=1 for 2d array //goes into preg 3
+	WRITE_Matrix_Large(rowN, colN, 0, 3, 64, 64, arr1, 4, 1, 0); //copy=1 for 2d array //goes into preg 4
+	WRITE_Matrix_Large(rowN, colN, 1, 0, 64, 64, arr1, 5, 1, 0); //copy=1 for 2d array //goes into preg 5
+	WRITE_Matrix_Large(rowN, colN, 1, 1, 64, 64, arr1, 6, 1, 0); //copy=1 for 2d array //goes into preg 6
+	WRITE_Matrix_Large(rowN, colN, 1, 2, 64, 64, arr1, 7, 1, 0); //copy=1 for 2d array //goes into preg 7
+	WRITE_Matrix_Large(rowN, colN, 1, 3, 64, 64, arr1, 8, 1, 0); //copy=1 for 2d array //goes into preg 8
+
+	execute(1, 9, 1, 1);
+	execute(1, 10, 1, 1);
+	execute(1, 11, 1, 1);
+	execute(1, 12, 1, 1);
+	WRITE_Matrix_Large(1, colN, 0, 0, 1, 64, arr2, 9, 1, 0); //goes into preg9
+	//WRITE_Matrix_Large(int row, int col, int block_row, int block_col, int row_blk_size, int col_blk_size, int W[][col], int reg, int copy, int block_dimension)
+	WRITE_Matrix_Large(1, colN, 0, 1, 1, 64, arr2, 10, 1, 0); //goes into preg10
+	WRITE_Matrix_Large(1, colN, 0, 2, 1, 64, arr2, 11, 1, 0); //goes into preg11
+	WRITE_Matrix_Large(1, colN, 0, 3, 1, 64, arr2, 12, 1, 0); //goes into preg12
+
+	ResetCounts();
+	//fill entire preg 9 and then 10,11,12 for vector
+	MATRIX_SUBTRACTION(1, 1, 0);
+	SHIFT_SOUTH(9, 0);
+	for(int x=0; x<SPAR_dimension-1; x++)
+	{
+		MATRIX_ADDITION(9, 0, 9);
+		SHIFT_SOUTH(0, 0);
+	}
+	MATRIX_SUBTRACTION(1, 1, 0);
+	SHIFT_SOUTH(10, 0);
+	for(int x=0; x<SPAR_dimension-1; x++)
+	{
+		MATRIX_ADDITION(10, 0, 10);
+		SHIFT_SOUTH(0, 0);
+	}
+	MATRIX_SUBTRACTION(1, 1, 0);
+	SHIFT_SOUTH(11, 0);
+	for(int x=0; x<SPAR_dimension-1; x++)
+	{
+		MATRIX_ADDITION(11, 0, 11);
+		SHIFT_SOUTH(0, 0);
+	}
+	MATRIX_SUBTRACTION(1, 1, 0);
+	SHIFT_SOUTH(12, 0);
+	for(int x=0; x<SPAR_dimension-1; x++)
+	{
+		MATRIX_ADDITION(12, 0, 12);
+		SHIFT_SOUTH(0, 0);
+	}
+
+
+
+	//Multiply Vector and Matrix
+	ELEMENTWISE_MULTIPLICATION(1, 9, 17);
+	ELEMENTWISE_MULTIPLICATION(2, 10, 18);
+	ELEMENTWISE_MULTIPLICATION(3, 11, 19);
+	ELEMENTWISE_MULTIPLICATION(4, 12, 20);
+	ELEMENTWISE_MULTIPLICATION(5, 9, 21);
+	ELEMENTWISE_MULTIPLICATION(6, 10, 22);
+	ELEMENTWISE_MULTIPLICATION(7, 11, 23);
+	ELEMENTWISE_MULTIPLICATION(8, 12, 24);
+
+	//accumulate
+	SHIFT_WEST(17, 25);
+	WEST_COLUMN_MOVE(18, 25);
+	SHIFT_WEST(18, 26);
+	WEST_COLUMN_MOVE(19, 26);
+	SHIFT_WEST(19, 27);
+	WEST_COLUMN_MOVE(20, 27);
+	SHIFT_WEST(20, 28);
+	SHIFT_WEST(21, 29);
+	WEST_COLUMN_MOVE(22,29);
+	SHIFT_WEST(22, 30);
+	WEST_COLUMN_MOVE(23,29);
+	SHIFT_WEST(23, 31);
+	WEST_COLUMN_MOVE(24,31);
+	SHIFT_WEST(24, 0);
+
+	MATRIX_ADDITION(17, 25, 17);
+	MATRIX_ADDITION(18, 26, 18);
+	MATRIX_ADDITION(19, 27, 19);
+	MATRIX_ADDITION(20, 28, 20);
+	MATRIX_ADDITION(21, 29, 21);
+	MATRIX_ADDITION(22, 30, 22);
+	MATRIX_ADDITION(23, 31, 23);
+	MATRIX_ADDITION(24, 0, 24);
+	for(int x=0; x<colN-2; x++)
+	{
+		SHIFT_WEST(25, 25);
+		WEST_COLUMN_MOVE(26, 25);
+		SHIFT_WEST(26, 26);
+		WEST_COLUMN_MOVE(27,26);
+		SHIFT_WEST(27, 27);
+		WEST_COLUMN_MOVE(28, 27);
+		SHIFT_WEST(28, 28);
+		SHIFT_WEST(29, 29);
+		WEST_COLUMN_MOVE(30, 29);
+		SHIFT_WEST(30, 30);
+		WEST_COLUMN_MOVE(31,30);
+		SHIFT_WEST(31, 31);
+		WEST_COLUMN_MOVE(0, 31);
+		SHIFT_WEST(0, 0);
+		//add into result
+		MATRIX_ADDITION(17, 25, 17);
+		MATRIX_ADDITION(18, 26, 18);
+		MATRIX_ADDITION(19, 27, 19);
+		MATRIX_ADDITION(20, 28, 20);
+		MATRIX_ADDITION(21, 29, 21);
+		MATRIX_ADDITION(22, 30, 22);
+		MATRIX_ADDITION(23, 31, 23);
+		MATRIX_ADDITION(24, 0, 24);
+	}
+	PrintCounts();
+
+	XTime_GetTime(&tStart);
+	for(int i=0; i<100; i++)
+	{
+		//fill entire preg 9 and then 10,11,12 for vector
+		MATRIX_SUBTRACTION(1, 1, 0);
+		SHIFT_SOUTH(9, 0);
+		for(int x=0; x<SPAR_dimension-1; x++)
+		{
+			MATRIX_ADDITION(9, 0, 9);
+			SHIFT_SOUTH(0, 0);
+		}
+		MATRIX_SUBTRACTION(1, 1, 0);
+		SHIFT_SOUTH(10, 0);
+		for(int x=0; x<SPAR_dimension-1; x++)
+		{
+			MATRIX_ADDITION(10, 0, 10);
+			SHIFT_SOUTH(0, 0);
+		}
+		MATRIX_SUBTRACTION(1, 1, 0);
+		SHIFT_SOUTH(11, 0);
+		for(int x=0; x<SPAR_dimension-1; x++)
+		{
+			MATRIX_ADDITION(11, 0, 11);
+			SHIFT_SOUTH(0, 0);
+		}
+		MATRIX_SUBTRACTION(1, 1, 0);
+		SHIFT_SOUTH(12, 0);
+		for(int x=0; x<SPAR_dimension-1; x++)
+		{
+			MATRIX_ADDITION(12, 0, 12);
+			SHIFT_SOUTH(0, 0);
+		}
+
+
+
+		//Multiply Vector and Matrix
+		ELEMENTWISE_MULTIPLICATION(1, 9, 17);
+		ELEMENTWISE_MULTIPLICATION(2, 10, 18);
+		ELEMENTWISE_MULTIPLICATION(3, 11, 19);
+		ELEMENTWISE_MULTIPLICATION(4, 12, 20);
+		ELEMENTWISE_MULTIPLICATION(5, 9, 21);
+		ELEMENTWISE_MULTIPLICATION(6, 10, 22);
+		ELEMENTWISE_MULTIPLICATION(7, 11, 23);
+		ELEMENTWISE_MULTIPLICATION(8, 12, 24);
+
+		//accumulate
+		SHIFT_WEST(17, 25);
+		WEST_COLUMN_MOVE(18, 25);
+		SHIFT_WEST(18, 26);
+		WEST_COLUMN_MOVE(19, 26);
+		SHIFT_WEST(19, 27);
+		WEST_COLUMN_MOVE(20, 27);
+		SHIFT_WEST(20, 28);
+		SHIFT_WEST(21, 29);
+		WEST_COLUMN_MOVE(22,29);
+		SHIFT_WEST(22, 30);
+		WEST_COLUMN_MOVE(23,29);
+		SHIFT_WEST(23, 31);
+		WEST_COLUMN_MOVE(24,31);
+		SHIFT_WEST(24, 0);
+
+		MATRIX_ADDITION(17, 25, 17);
+		MATRIX_ADDITION(18, 26, 18);
+		MATRIX_ADDITION(19, 27, 19);
+		MATRIX_ADDITION(20, 28, 20);
+		MATRIX_ADDITION(21, 29, 21);
+		MATRIX_ADDITION(22, 30, 22);
+		MATRIX_ADDITION(23, 31, 23);
+		MATRIX_ADDITION(24, 0, 24);
+		for(int x=0; x<colN-2; x++)
+		{
+			SHIFT_WEST(25, 25);
+			WEST_COLUMN_MOVE(26, 25);
+			SHIFT_WEST(26, 26);
+			WEST_COLUMN_MOVE(27,26);
+			SHIFT_WEST(27, 27);
+			WEST_COLUMN_MOVE(28, 27);
+			SHIFT_WEST(28, 28);
+			SHIFT_WEST(29, 29);
+			WEST_COLUMN_MOVE(30, 29);
+			SHIFT_WEST(30, 30);
+			WEST_COLUMN_MOVE(31,30);
+			SHIFT_WEST(31, 31);
 			WEST_COLUMN_MOVE(0, 31);
 			SHIFT_WEST(0, 0);
 			//add into result

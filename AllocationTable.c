@@ -711,6 +711,7 @@ void printTableVReg(AllocationTable *table)
 //		table->vreg[i].orientation = 100;
 //		printf("orientation: %d,", table->vreg[i].orientation);
 		printf("\torientation: %d", table->vreg[i].orientation);
+		printf("\trows: %d, cols: %d", table->vreg[i].rows, table->vreg[i].cols);
 		printf("\tplacement: ");
 		for(int j=0; j<Max_PrForVr; j++)
 		{

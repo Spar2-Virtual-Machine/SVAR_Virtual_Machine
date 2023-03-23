@@ -314,7 +314,18 @@ void WRITE_Matrix_Large(int row, int col, int block_row, int block_col, int row_
 				ss = s - (row_blk_size * block_row);
 				tt = t - (col_blk_size * block_col);
 				WRITE_REG(ss/(4 * Tile_dim), tt/(4 * Tile_dim), (ss/4)%Tile_dim, (tt/4)%Tile_dim, ((ss*4+tt)%4+ss*4)%16, reg, W[s][t]);
-
+			}
+		}
+	}
+	else if (copy == 2)		//write a 2D array, starts from the left-most PEs
+	{
+		for( t = row_blk_size * block_row; t < ((block_row + 1) * row_blk_size); t++)
+		{
+			for( s = col_blk_size * block_col; s < ((block_col + 1) * col_blk_size); s++)
+			{
+				tt = t - (row_blk_size * block_row);
+				ss = s - (col_blk_size * block_col);
+				WRITE_REG(ss/(4 * Tile_dim), tt/(4 * Tile_dim), (ss/4)%Tile_dim, (tt/4)%Tile_dim, ((ss*4+tt)%4+ss*4)%16, reg, W[t][s]);
 			}
 		}
 	}
@@ -600,6 +611,20 @@ void WEST_COLUMN_MOVE(int rs, int rd){
 			{
 				int x = READ_REG(a, 0, b, 0, j-3, rs);
 				WRITE_REG(a, Array_dim-1, b, Tile_dim-1, j, rd, x);
+			}
+		}
+	}
+}
+
+void NORTH_COLUMN_MOVE(int rs, int rd){
+	for(int a = 0; a < Array_dim; a++)
+	{
+		for (int b = 0; b < Tile_dim; b++)
+		{
+			for(int j = 0; j < 4; j+=1)
+			{
+				int x = READ_REG(0, a, 0, b, j, rs);//last 4 pes
+				WRITE_REG(Array_dim-1, a, Tile_dim-1, b, j+12, rd, x);//first 4 pes
 			}
 		}
 	}

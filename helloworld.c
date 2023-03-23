@@ -63,6 +63,7 @@
 #include "AllocationTable.h"
 #include "virt.h"
 #include "Test.h"
+#include "MLP_Benchmarks.h"
 
 #define MAX_LEN 32
 #define FIXED_POINT_FRACTIONAL_BITS 16
@@ -100,7 +101,9 @@ int main()
 //	Test_MulAcc_2Segment(&allocation_table);
 //	Reset_Registers();
 //	Test_MulAcc_4Segment(&allocation_table);
+	MLP_VM_For64x64_Count(&allocation_table);
 	Reset_Registers();
-	Test_MulAcc_8Segment(&allocation_table);
+	MLP_Native_For64x64_Count(&allocation_table);
+
 	return 0;
 }

@@ -866,6 +866,11 @@ void Declare_M(Matrix *m, int rows, int cols){
 	//leave placement alone. Placement is only to be used when storing a matrix to keep track of the individual segments.
 }
 
+void Set_M_Data(Matrix *m, int *data){
+	free(m->memory);
+	m->memory = data;
+}
+
 void Deallocate_M(Matrix *m){
 	free(m->memory);
 }
@@ -873,6 +878,11 @@ void Deallocate_M(Matrix *m){
 void Declare_V(Vector *v, int size){
 	v->size = size;
 	v->memory = (int*)malloc(size*sizeof(int));
+}
+
+void Set_V_Data(Vector *v, int *data){
+	free(v->memory);
+	v->memory = data;
 }
 
 void Deallocate_V(Vector *v){
