@@ -934,6 +934,8 @@ void Load_M(Matrix *m, int rs, AllocationTable *table){
 		{
 			m->memory[i] = 0;
 		}
+		m->cols = cols;
+		m->rows = rows;
 		return;
 	} //canno write to reg 0
 
@@ -951,6 +953,8 @@ void Load_M(Matrix *m, int rs, AllocationTable *table){
 		for(int j=0; j<cols; j++)
 		m->memory[i*cols + j] = table->vreg[rs].data[i*cols + j];
 	}
+	m->cols = cols;
+	m->rows = rows;
 }
 
 void Store_V(Vector* v, int rd, AllocationTable *table){
@@ -971,18 +975,22 @@ void Load_V(Vector* v, int rs, AllocationTable *table){
 			v->memory[i] = 0;
 		}
 		return;
-	} //canno write to reg 0
+	} //cannot read from reg 0
+
 	if(table->vreg[rs].status==1 ||table->vreg[rs].status==2)
 	{
 		copyFromPRegsToVRegData(rs, table);
 	}
+
 	int numElements = table->vreg[rs].rows;
-	free(v->memory);
+//	free(v->memory); //crashes sometimes because of this line. Todo: see if this wiill need to be reimplemented in the future
+
 	v->memory = (int*)malloc(numElements*sizeof(int));
-	for(int i=0; i<numElements; i++)
+	for(int i=0; i<numElements && i < 10000; i++)
 	{
 		v->memory[i] = table->vreg[rs].data[i];
 	}
+	v->size=numElements;
 }
 
 ///////////////////-----------------Math Operations-------------------------------//////////////////////////
@@ -1271,6 +1279,14 @@ void Mul_MV(int rs_m, int rs_v, int rd, AllocationTable *table){
 		table->vreg[rs_v].data[it] = old_vdata[it];
 	}
 //	printVReg(rs_v, table);
+}
+
+void RELU_V(int rs, AllocationTable *table){
+	removeVRegFromPRegs(rs, table);
+	for(int i=0; i<table->vreg[rs].rows; i++)
+	{
+		if(table->vreg[rs].data[i] < 0){table->vreg[rs].data[i]=0;}
+	}
 }
 
 void Reset_Registers(){

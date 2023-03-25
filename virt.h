@@ -46,4 +46,5 @@ void E_Mul_VV(int rs1, int rs2, int rd, AllocationTable *table);
 void AccumulateColumns_M(int rs, int rd, int tempReg, AllocationTable *table);
 void Mul_MV(int rs_m, int rs_v, int rd, AllocationTable *table);
 
+void RELU_V(int rs, AllocationTable *table);
 #endif

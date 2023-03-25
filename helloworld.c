@@ -115,13 +115,13 @@ int main()
 //	Reset_Registers();
 //	Test_MulAcc_8Segment_T(&allocation_table);
 
-//	Reset_Registers();
-//	MLP_Native_For64x64_Count(&allocation_table);
-//	Reset_Registers();
-//	MLP_Native_For64x64_Time(&allocation_table);
-//	Reset_Registers();
-//	MLP_VM_For64x64_Count(&allocation_table);
-//	Reset_Registers();
-//	MLP_VM_For64x64_Time(&allocation_table);
+	Reset_Registers();
+	MLP_Native_For64x64_Count(&allocation_table);
+	Reset_Registers();
+	MLP_Native_For64x64_Time(&allocation_table);
+	Reset_Registers();
+	MLP_VM_For64x64_Count(&allocation_table);
+	Reset_Registers();
+	MLP_VM_For64x64_Time(&allocation_table);
 	return 0;
 }

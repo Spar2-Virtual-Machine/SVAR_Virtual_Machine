@@ -42,6 +42,7 @@ int ConvertMatrixToVectorTest(AllocationTable *table);
 int ConvertMatrixToVectorTurnedTest(AllocationTable *table);
 int MultiplyAccumulateMatrixVectorSetupTest(AllocationTable *table);
 int MultiplyAccumulateMatrixVectorTest(AllocationTable *table);
+void TestRELU(AllocationTable *table);
 
 int MLP_Benchmark(AllocationTable *table); //not used
 

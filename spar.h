@@ -27,6 +27,8 @@ extern int sparRD_cnt;
 typedef int32_t fixed_point_t;
 
 //define prototypes; ordered as they appear in the source file
+void RELU_FirstRow(int rs);
+void RELU_FirstColumn(int rs);
 void ColumnToColumn(int rd, int rs, int copy);
 void RowToColumn(int rd, int rs, int function);
 void ColumnToRow(int rd, int rs, int function);
@@ -60,5 +62,6 @@ int getbit(int n, int k);
 void printArray(int* arr, int size);
 void getTranspose(int* ram, int* reg);
 int getTrans(int* ram);
+void Activation1stColumn(int rs, int temp, int function);
 
 #endif

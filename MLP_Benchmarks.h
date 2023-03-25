@@ -19,8 +19,16 @@
 #include "virt.h"
 #include "xtime_l.h"
 
+void MLP_VM_For32x32_Count(AllocationTable *table);
+void MLP_VM_For32x32_Time(AllocationTable *table);
+void MLP_Native_For32x32_Count(AllocationTable *table);
+void MLP_Native_For32x32_Time(AllocationTable *table);
 void MLP_VM_For64x64_Count(AllocationTable *table);
 void MLP_VM_For64x64_Time(AllocationTable *table);
 void MLP_Native_For64x64_Count(AllocationTable *table);
 void MLP_Native_For64x64_Time(AllocationTable *table);
+void MLP_VM_For96x96_Count(AllocationTable *table);
+void MLP_VM_For96x96_Time(AllocationTable *table);
+void MLP_Native_For96x96_Count(AllocationTable *table);
+void MLP_Native_For96x96_Time(AllocationTable *table);
 #endif

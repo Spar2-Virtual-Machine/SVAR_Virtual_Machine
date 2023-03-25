@@ -21,6 +21,7 @@ int ShS_cnt = 0;
 int mult_cnt = 0;
 int add_cnt = 0;
 int sub_cnt = 0;
+int relu_cnt = 0;
 
 int sparAdd_cnt=0;
 int sparSub_cnt=0;
@@ -31,6 +32,34 @@ int sparShE_cnt=0;
 int sparShW_cnt=0;
 int sparWR_cnt=0;
 int sparRD_cnt = 0;
+
+void RELU_FirstRow(int rs){
+	for(int a = 0; a < Array_dim; a++)
+	{
+		for (int b = 0; b < Tile_dim; b++)
+		{
+			for(int j = 0; j < 4; j+=1)
+			{
+				int x = READ_REG(0, a, 0, b, j, rs);
+				if(x<0) WRITE_REG(0, a, 0, b, j, rs, 0);
+			}
+		}
+	}
+}
+
+void RELU_FirstColumn(int rs){
+	for(int a = 0; a < Array_dim; a++)
+	{
+		for (int b = 0; b < Tile_dim; b++)
+		{
+			for(int j = 3; j < 16; j+=4)
+			{
+				int x = READ_REG(a, 0, b, 0, j-3, rs);
+				if(x<0) WRITE_REG(a, 0, b, 0, j-3, rs, 0);
+			}
+		}
+	}
+}
 
 void ColumnToColumn(int rd, int rs, int copy){
 
@@ -55,7 +84,6 @@ void ColumnToColumn(int rd, int rs, int copy){
 		BIT_SERIAL_mWriteReg(XPAR_BIT_SERIAL_0_S00_AXI_BASEADDR, BIT_SERIAL_S00_AXI_SLV_REG1_OFFSET, 0x00000001+LEN);//start = 0, reset = 1
 		usleep_A53(100);
 	}
-
 }
 
 void RowToColumn(int rd, int rs, int function){
@@ -560,6 +588,9 @@ int execute(int opcode, int rd, int rs1, int rs2)
 			break;
 		case 8:
 			sparShN_cnt++;
+			break;
+		case 9:
+			relu_cnt++;
 			break;
 	};
 

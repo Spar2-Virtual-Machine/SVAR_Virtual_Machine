@@ -409,6 +409,58 @@ int TestFillVectorMixedOrientation(AllocationTable *table)
 	return 0; //fail by default
 }
 
+int TestRELU_V(AllocationTable *table){
+	srand(1283420);
+	int rowN = 1+rand()%100;
+	int colN = 1+rand()%100;
+
+	int arr1[rowN][colN];
+	int arr2[rowN][colN];
+	xil_printf("%p\n", table);
+	for(int i=0; i < rowN; i++)
+	{
+		for(int j=0; j < colN; j++)
+		{
+			arr1[i][j] = rand()%2000-1000;
+			arr2[i][j] = rand()%2000-1000;
+		}
+	}
+	xil_printf("%d Rows and %d Columns \n", rowN, colN);
+
+	//setup the matrix
+	Vector v1, v2;
+	Declare_V(&v1, rowN);
+	v1.memory=(int*)&arr1;
+	Declare_V(&v2, rowN);
+	v2.memory=(int*)&arr2;
+
+	Store_V(&v1, 1, table);
+	Store_V(&v2, 2, table);
+	table->vreg[1].orientation = 0;
+	table->vreg[2].orientation = 1;
+	safeAllocatePRegs(1, NULL, 0, table);
+	safeAllocatePRegs(2, NULL, 0, table);
+
+	E_Add_VV(1,2,4, table);
+
+	FillVector(4, 0, table);
+//	printVReginPReg(4, table);
+
+	printVReg(1, table);
+	printVReg(2, table);
+	printVReg(4, table);
+	RELU_V(1, table);
+	RELU_V(2, table);
+	RELU_V(4, table);
+	printVReg(1, table);
+	printVReg(2, table);
+	printVReg(4, table);
+
+
+
+	return 0;
+}
+
 int ConvertMatrixToVectorTest(AllocationTable *table){
 	Reset_Registers();
 	xil_printf("RESET REGISTERS IS DONE! \n");
@@ -786,6 +838,7 @@ int MLP_Benchmark(AllocationTable *table){
 	}
 	return 0;
 }
+
 
 
 extern inline void ResetCounts(){
