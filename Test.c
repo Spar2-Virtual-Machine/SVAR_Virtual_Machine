@@ -409,7 +409,7 @@ int TestFillVectorMixedOrientation(AllocationTable *table)
 	return 0; //fail by default
 }
 
-int TestRELU_V(AllocationTable *table){
+void TestRELU2(AllocationTable *table){
 	srand(1283420);
 	int rowN = 1+rand()%100;
 	int colN = 1+rand()%100;
@@ -421,8 +421,8 @@ int TestRELU_V(AllocationTable *table){
 	{
 		for(int j=0; j < colN; j++)
 		{
-			arr1[i][j] = rand()%2000-1000;
-			arr2[i][j] = rand()%2000-1000;
+			arr1[i][j] = -i-(100*j);
+			arr2[i][j] = 500-rand()%1000;
 		}
 	}
 	xil_printf("%d Rows and %d Columns \n", rowN, colN);
@@ -441,24 +441,41 @@ int TestRELU_V(AllocationTable *table){
 	safeAllocatePRegs(1, NULL, 0, table);
 	safeAllocatePRegs(2, NULL, 0, table);
 
-	E_Add_VV(1,2,4, table);
-
-	FillVector(4, 0, table);
 //	printVReginPReg(4, table);
 
+
+//	printVReg(1, table);
+//	printVReg(2, table);
+//	printVReg(4, table);
 	printVReg(1, table);
-	printVReg(2, table);
-	printVReg(4, table);
-	RELU_V(1, table);
-	RELU_V(2, table);
-	RELU_V(4, table);
+	ReLU(1, table);
 	printVReg(1, table);
-	printVReg(2, table);
-	printVReg(4, table);
+//	printVReg(0, table);
+//	RELU_V(2, table);
+//	RELU_V(4, table);
+//	printVReg(0, table);
+//	printVReg(1, table);
+//	printVReg(2, table);
+//	printVReg(4, table);
+	int j = 0;
+	for(int i=j; i==j; i++)
+	{
+		for(int s=0; s<SPAR_dimension; s++)
+		{
+			for(int t=0; t<SPAR_dimension; t++)
+			{
+				//WRITE_REG(int Tile_i, int Tile_j, int BRAM_i, int BRAM_j, int PE, int reg, unsigned int data)
+				WRITE_REG(s/(4 * Tile_dim), t/(4 * Tile_dim), (s/4)%Tile_dim, (t/4)%Tile_dim, ((s*4+t)%4+s*4)%16, 4, i);
+			}
+		}
 
+		printf("\ni:%d\n", i);
+		execute(10, 0, 0, 4);
 
+	}
+//	printVReg(1, table);
 
-	return 0;
+	return;
 }
 
 int ConvertMatrixToVectorTest(AllocationTable *table){
@@ -851,10 +868,11 @@ extern inline void ResetCounts(){
 	sparShW_cnt=0;
 	sparWR_cnt=0;
 	sparRD_cnt=0;
+	sparReLU_cnt=0;
 }
 
 extern inline void PrintCounts(){
-	printf("Add Count: %d \n Sub Count: %d \n Mul Count %d\n", sparAdd_cnt, sparSub_cnt, sparMul_cnt);
+	printf("Add Count: %d \n Sub Count: %d \n Mul Count: %d\n ReLU Count: %d\n", sparAdd_cnt, sparSub_cnt, sparMul_cnt, sparReLU_cnt);
 	printf("North Count: %d \n South Count: %d \n East Count: %d \n West Count: %d\n", sparShN_cnt, sparShS_cnt, sparShE_cnt, sparShW_cnt);
 	printf("Write Count: %d \n Read Count: %d\n", sparWR_cnt, sparRD_cnt);
 }
@@ -1621,7 +1639,7 @@ int Test_Elementwise_8Segment(AllocationTable *table){
 	ElapsedTime = (1.0 * (tEnd - tStart) / (COUNTS_PER_SECOND));
 	printf("Multiplication x100 Time: %lf Seconds\n", ElapsedTime);
 
-	printf("VM Matrix Multiplication-------------------------------------------------------\n"); //here
+	printf("VM Matrix EMultiplication-------------------------------------------------------\n"); //here
 	resetTable(table);
 	Store_M(&matrix1, 1, table);
 	Store_M(&matrix2, 2, table);
@@ -1709,7 +1727,7 @@ int Test_MulAcc_1Segment(AllocationTable *table){
 
 	//get time for 100 iterations
 	XTime_GetTime(&tStart);
-	for(int i=0; i<100; i++)
+	for(int i=0; i<1; i++)
 	{
 		//fill entire preg for vector
 		//clear preg 0
@@ -1738,27 +1756,27 @@ int Test_MulAcc_1Segment(AllocationTable *table){
 
 	XTime_GetTime(&tEnd);
 	ElapsedTime = (1.0 * (tEnd - tStart) / (COUNTS_PER_SECOND));
-	printf("Matrix-Vector Multiplication x100 Time: %lf Seconds\n", ElapsedTime);
+	printf("Matrix-Vector Multiplication x1 Time: %lf Seconds\n", ElapsedTime);
 
 	printf("VM Matrix-Vector Multiplication-------------------------------------------------------\n"); //here
+	Reset_Registers();
 	resetTable(table);
 	Store_M(&matrix1, 1, table);
 	Store_V(&vector1, 2, table);
-	Mul_MV(1,2,3, table); //run it once just to setup the data
-//	printVReg(3, table); //print function for testing result
+	PrepareReg_Mul_MVM(1, 2, 0, table);//prepare data
 
 	ResetCounts();
 	Mul_MV(1,2,3, table); //here
 	PrintCounts();
-
+	PrepareReg_Mul_MVM(1, 2, 0, table);//prepare data
 	XTime_GetTime(&tStart);
-	for(int i=0; i<100; i++)
+	for(int i=0; i<1; i++)
 	{
 		Mul_MV(1,2,3, table); //here
 	}
 	XTime_GetTime(&tEnd);
 	ElapsedTime = (1.0 * (tEnd - tStart) / (COUNTS_PER_SECOND));
-	printf("Matrix-Vector Multiplication x100 Time: %lf Seconds\n", ElapsedTime);
+	printf("Matrix-Vector Multiplication x1 Time: %lf Seconds\n", ElapsedTime);
 
 
 	return 1; //I'm not sure why I even had this return anything
@@ -1837,7 +1855,7 @@ int Test_MulAcc_2Segment(AllocationTable *table){
 //	printPReg(18);
 
 	XTime_GetTime(&tStart);
-	for(int i=0; i<100; i++)
+	for(int i=0; i<1; i++)
 	{
 		//fill entire preg 9 for vector
 		MATRIX_SUBTRACTION(1, 1, 0);
@@ -1869,27 +1887,27 @@ int Test_MulAcc_2Segment(AllocationTable *table){
 	}
 	XTime_GetTime(&tEnd);
 	ElapsedTime = (1.0 * (tEnd - tStart) / (COUNTS_PER_SECOND));
-	printf("Matrix-Vector Multiplication x100 Time: %lf Seconds\n", ElapsedTime);
+	printf("Matrix-Vector Multiplication x1 Time: %lf Seconds\n", ElapsedTime);
 
 	printf("VM Matrix-Vector Multiplication-------------------------------------------------------\n"); //here
+	Reset_Registers();
 	resetTable(table);
 	Store_M(&matrix1, 1, table);
 	Store_V(&vector1, 2, table);
-	Mul_MV(1,2,3, table); //run it once just to load the data into spar. This will eliminate initial loading times
-//	printVReg(3, table);
+	PrepareReg_Mul_MVM(1, 2, 0, table);//prepare data
 
 	ResetCounts();
 	Mul_MV(1,2,3, table); //here
 	PrintCounts();
-
+	PrepareReg_Mul_MVM(1, 2, 0, table);//prepare data
 	XTime_GetTime(&tStart);
-	for(int i=0; i<100; i++)
+	for(int i=0; i<1; i++)
 	{
 		Mul_MV(1,2,3, table); //here
 	}
 	XTime_GetTime(&tEnd);
 	ElapsedTime = (1.0 * (tEnd - tStart) / (COUNTS_PER_SECOND));
-	printf("Matrix-Vector Multiplication x100 Time: %lf Seconds\n", ElapsedTime);
+	printf("Matrix-Vector Multiplication x1 Time: %lf Seconds\n", ElapsedTime);
 
 
 	return 1;
@@ -1982,7 +2000,7 @@ int Test_MulAcc_2Segment_T(AllocationTable *table){
 //	printPReg(18);
 
 	XTime_GetTime(&tStart);
-	for(int i=0; i<100; i++)
+	for(int i=0; i<1; i++)
 	{
 		//fill entire preg 9 then preg10 for vector
 		MATRIX_SUBTRACTION(1, 1, 0);
@@ -2023,27 +2041,27 @@ int Test_MulAcc_2Segment_T(AllocationTable *table){
 	}
 	XTime_GetTime(&tEnd);
 	ElapsedTime = (1.0 * (tEnd - tStart) / (COUNTS_PER_SECOND));
-	printf("Matrix-Vector Multiplication x100 Time: %lf Seconds\n", ElapsedTime);
+	printf("Matrix-Vector Multiplication x1 Time: %lf Seconds\n", ElapsedTime);
 
 	printf("VM Matrix-Vector Multiplication-------------------------------------------------------\n"); //here
+	Reset_Registers();
 	resetTable(table);
 	Store_M(&matrix1, 1, table);
 	Store_V(&vector1, 2, table);
-	Mul_MV(1,2,3, table); //run it once just to setup the data
+	PrepareReg_Mul_MVM(1, 2, 0, table);//prepare data
 
 	ResetCounts();
 	Mul_MV(1,2,3, table); //here
 	PrintCounts();
-//	printVReg(3, table);
-
+	PrepareReg_Mul_MVM(1, 2, 0, table);//prepare data
 	XTime_GetTime(&tStart);
-	for(int i=0; i<100; i++)
+	for(int i=0; i<1; i++)
 	{
 		Mul_MV(1,2,3, table); //here
 	}
 	XTime_GetTime(&tEnd);
 	ElapsedTime = (1.0 * (tEnd - tStart) / (COUNTS_PER_SECOND));
-	printf("Matrix-Vector Multiplication x100 Time: %lf Seconds\n", ElapsedTime);
+	printf("Matrix-Vector Multiplication x1 Time: %lf Seconds\n", ElapsedTime);
 
 	return 1;
 }
@@ -2156,7 +2174,7 @@ int Test_MulAcc_4Segment(AllocationTable *table){
 //	printf("\n");
 
 	XTime_GetTime(&tStart);
-	for(int i=0; i<100; i++)
+	for(int i=0; i<1; i++)
 	{
 		//fill entire preg 9 and then 10 for vector
 		MATRIX_SUBTRACTION(1, 1, 0);
@@ -2209,28 +2227,28 @@ int Test_MulAcc_4Segment(AllocationTable *table){
 	}
 	XTime_GetTime(&tEnd);
 	ElapsedTime = (1.0 * (tEnd - tStart) / (COUNTS_PER_SECOND));
-	printf("Matrix-Vector Multiplication x100 Time: %lf Seconds\n", ElapsedTime);
+	printf("Matrix-Vector Multiplication x1 Time: %lf Seconds\n", ElapsedTime);
 
 
 	printf("VM Matrix-Vector Multiplication-------------------------------------------------------\n"); //here
+	Reset_Registers();
 	resetTable(table);
 	Store_M(&matrix1, 1, table);
 	Store_V(&vector1, 2, table);
-	Mul_MV(1,2,3, table); //run it once just to setup the data
-	//	printVReg(3, table);
+	PrepareReg_Mul_MVM(1, 2, 0, table);//prepare data
+
 	ResetCounts();
 	Mul_MV(1,2,3, table); //here
 	PrintCounts();
-
-
+	PrepareReg_Mul_MVM(1, 2, 0, table);//prepare data
 	XTime_GetTime(&tStart);
-	for(int i=0; i<100; i++)
+	for(int i=0; i<1; i++)
 	{
 		Mul_MV(1,2,3, table); //here
 	}
 	XTime_GetTime(&tEnd);
 	ElapsedTime = (1.0 * (tEnd - tStart) / (COUNTS_PER_SECOND));
-	printf("Matrix-Vector Multiplication x100 Time: %lf Seconds\n", ElapsedTime);
+	printf("Matrix-Vector Multiplication x1 Time: %lf Seconds\n", ElapsedTime);
 	return 1;
 }
 
@@ -2378,7 +2396,7 @@ int Test_MulAcc_8Segment(AllocationTable *table){
 //	printf("\n--\n");
 
 	XTime_GetTime(&tStart);
-	for(int i=0; i<100; i++)
+	for(int i=0; i<1; i++)
 	{
 		//fill entire preg 9 and then 10 for vector
 		MATRIX_SUBTRACTION(1, 1, 0);
@@ -2465,29 +2483,26 @@ int Test_MulAcc_8Segment(AllocationTable *table){
 	XTime_GetTime(&tEnd);
 	ElapsedTime = (1.0 * (tEnd - tStart) / (COUNTS_PER_SECOND));
 
-	printf("Matrix-Vector Multiplication x100 Time: %lf Seconds\n", ElapsedTime);
+	printf("Matrix-Vector Multiplication x1 Time: %lf Seconds\n", ElapsedTime);
 	printf("VM Matrix-Vector Multiplication-------------------------------------------------------\n"); //here
 	Reset_Registers();
 	resetTable(table);
 	Store_M(&matrix1, 1, table);
 	Store_V(&vector1, 2, table);
-	Mul_MV(1,2,3, table); //run it once just to setup the data
-//	printVReg(3, table);
-
+	PrepareReg_Mul_MVM(1, 2, 0, table);//prepare data
 
 	ResetCounts();
-	printf("\n\n");
 	Mul_MV(1,2,3, table); //here
 	PrintCounts();
-
+	PrepareReg_Mul_MVM(1, 2, 0, table);//prepare data
 	XTime_GetTime(&tStart);
-	for(int i=0; i<100; i++)
+	for(int i=0; i<1; i++)
 	{
 		Mul_MV(1,2,3, table); //here
 	}
 	XTime_GetTime(&tEnd);
 	ElapsedTime = (1.0 * (tEnd - tStart) / (COUNTS_PER_SECOND));
-	printf("Matrix-Vector Multiplication x100 Time: %lf Seconds\n", ElapsedTime);
+	printf("Matrix-Vector Multiplication x1Time: %lf Seconds\n", ElapsedTime);
 	return 1;
 }
 int Test_MulAcc_8Segment_T(AllocationTable *table){
@@ -2635,7 +2650,7 @@ int Test_MulAcc_8Segment_T(AllocationTable *table){
 	PrintCounts();
 
 	XTime_GetTime(&tStart);
-	for(int i=0; i<100; i++)
+	for(int i=0; i<1; i++)
 	{
 		//fill entire preg 9 and then 10,11,12 for vector
 		MATRIX_SUBTRACTION(1, 1, 0);
@@ -2730,26 +2745,64 @@ int Test_MulAcc_8Segment_T(AllocationTable *table){
 	XTime_GetTime(&tEnd);
 	ElapsedTime = (1.0 * (tEnd - tStart) / (COUNTS_PER_SECOND));
 
-	printf("Matrix-Vector Multiplication x100 Time: %lf Seconds\n", ElapsedTime);
+	printf("Matrix-Vector Multiplication x1Time: %lf Seconds\n", ElapsedTime);
 	printf("VM Matrix-Vector Multiplication-------------------------------------------------------\n"); //here
 	Reset_Registers();
 	resetTable(table);
 	Store_M(&matrix1, 1, table);
 	Store_V(&vector1, 2, table);
-	Mul_MV(1,2,3, table); //run it once just to setup the data
-	// printVReg(3, table);
+	PrepareReg_Mul_MVM(1, 2, 0, table);//prepare data
 
 	ResetCounts();
 	Mul_MV(1,2,3, table); //here
 	PrintCounts();
-
+	PrepareReg_Mul_MVM(1, 2, 0, table);//prepare data
 	XTime_GetTime(&tStart);
-	for(int i=0; i<100; i++)
+	for(int i=0; i<1; i++)
 	{
 		Mul_MV(1,2,3, table); //here
 	}
 	XTime_GetTime(&tEnd);
 	ElapsedTime = (1.0 * (tEnd - tStart) / (COUNTS_PER_SECOND));
-	printf("Matrix-Vector Multiplication x100 Time: %lf Seconds\n", ElapsedTime);
+	printf("Matrix-Vector Multiplication x1 Time: %lf Seconds\n", ElapsedTime);
 	return 1;
+}
+
+void Test_RELU_1Segments(AllocationTable *table){
+	printf("\n1 Segment Elementwise\n");
+	resetTable(table);
+	printf("-------------------------------------------------------------------------\r\n");
+	srand(12839039);
+	//time variable
+	XTime tStart, tEnd;
+	double ElapsedTime;
+
+	//define sample data
+	int rowN = 64;
+	int colN = 64;
+	int arr1[rowN][colN];
+	int arr2[rowN][colN];
+	for(int i=0; i < rowN; i++)
+	{
+		for(int j=0; j < colN; j++)
+		{
+			arr1[i][j] = 1<<15;
+			arr2[i][j] = 0;
+		}
+	}
+	//void WRITE_Matrix_Large(int row, int col, int block_row, int block_col, int row_blk_size, int col_blk_size, int W[][col], int reg, int copy, int block_dimension){
+	WRITE_Matrix_Large(rowN, colN, 0, 0, 64, 64, arr1, 1, 1, 0); //copy=1 for 2d array //goes into preg 1
+	WRITE_Matrix_Large(rowN, colN, 0, 0, 64, 64, arr2, 2, 1, 0); //goes into preg 2.
+	ResetCounts();
+
+	printPReg(1);
+	printPReg(2);
+	RowToColumn(2,1,2);
+//	ColumnToRow(2,1,2);
+	printPReg(1);
+	printPReg(2);
+}
+
+void Test_RELU_2Segments(AllocationTable *table){
+
 }

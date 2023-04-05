@@ -49,7 +49,7 @@ void PopulateData(int input[inputSize], int w1[l1Nodes][inputSize], int b1[l1Nod
 		{
 			w2[i][j]=(1<<10);
 		}
-		b2[i]=-1919999;
+		b2[i]=10;
 	}
 }
 
@@ -81,13 +81,16 @@ void MLP_VM_For32x32_Count(AllocationTable *table){
 
 	Store_V(&b1, 4, table);
 	E_Add_VV(3, 4, 3, table);
-	RELU_V(3, table);
+	ReLU(3, table);
 
 	Store_M(&w2, 5, table);
 	Mul_MV(5, 3, 6, table);
+	printVReg(5, table);
 	Store_V(&b2, 7, table);
+	printVReg(7, table);
 	E_Add_VV(6, 7, 6, table);
-	RELU_V(6, table);
+	printVReg(6, table);
+	ReLU(6, table);
 
 	PrintCounts_m();
 	printVReg(6, table);
@@ -123,13 +126,13 @@ void MLP_VM_For32x32_Time(AllocationTable *table){
 
 	Store_V(&b1, 4, table);
 	E_Add_VV(3, 4, 3, table);
-	RELU_V(3, table);
+//	ReLU(3, table);
 
 	Store_M(&w2, 5, table);
 	Mul_MV(5, 3, 6, table);
 	Store_V(&b2, 7, table);
 	E_Add_VV(6, 7, 6, table);
-	RELU_V(6, table);
+	ReLU(6, table);
 
 	XTime_GetTime(&tEnd);
 	double ElapsedTime = (1.0 * (tEnd - tStart) / (COUNTS_PER_SECOND));
@@ -564,13 +567,13 @@ void MLP_VM_For64x64_Count(AllocationTable *table){
 
 	Store_V(&b1, 4, table);
 	E_Add_VV(3, 4, 3, table);
-	RELU_V(3, table);
+	ReLU(3, table);
 
 	Store_M(&w2, 5, table);
 	Mul_MV(5, 3, 6, table);
 	Store_V(&b2, 7, table);
 	E_Add_VV(6, 7, 6, table);
-	RELU_V(6, table);
+	ReLU(6, table);
 	PrintCounts_m();
 	printVReg(6, table);
 }
@@ -605,13 +608,13 @@ void MLP_VM_For64x64_Time(AllocationTable *table){
 
 	Store_V(&b1, 4, table);
 	E_Add_VV(3, 4, 3, table);
-	RELU_V(3, table);
+	ReLU(3, table);
 
 	Store_M(&w2, 5, table);
 	Mul_MV(5, 3, 6, table);
 	Store_V(&b2, 7, table);
 	E_Add_VV(6, 7, 6, table);
-	RELU_V(6, table);
+	ReLU(6, table);
 	XTime_GetTime(&tEnd);
 	double ElapsedTime = (1.0 * (tEnd - tStart) / (COUNTS_PER_SECOND));
 	printf("2 MLP Layers VM Time: %lf Seconds\n", ElapsedTime);
@@ -870,13 +873,13 @@ void MLP_VM_For96x96_Count(AllocationTable *table){
 
 	Store_V(&b1, 4, table);
 	E_Add_VV(3, 4, 3, table);
-	RELU_V(3, table);
+	ReLU(3, table);
 
 	Store_M(&w2, 5, table);
 	Mul_MV(5, 3, 6, table);
 	Store_V(&b2, 7, table);
 	E_Add_VV(6, 7, 6, table);
-	RELU_V(6, table);
+	ReLU(6, table);
 	PrintCounts_m();
 	printVReg(6, table);
 }
@@ -910,13 +913,13 @@ void MLP_VM_For96x96_Time(AllocationTable *table){
 
 	Store_V(&b1, 4, table);
 	E_Add_VV(3, 4, 3, table);
-	RELU_V(3, table);
+	ReLU(3, table);
 
 	Store_M(&w2, 5, table);
 	Mul_MV(5, 3, 6, table);
 	Store_V(&b2, 7, table);
 	E_Add_VV(6, 7, 6, table);
-	RELU_V(6, table);
+	ReLU(6, table);
 
 	XTime_GetTime(&tEnd);
 
@@ -1092,3 +1095,4 @@ void MLP_Native_For96x96_Time(AllocationTable *table){
 	double ElapsedTime = (1.0 * (tEnd - tStart) / (COUNTS_PER_SECOND));
 	printf("2 MLP Layers Native Time: %lf Seconds\n", ElapsedTime);
 }
+

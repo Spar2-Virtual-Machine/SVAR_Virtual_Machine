@@ -23,13 +23,16 @@ extern int sparShE_cnt;
 extern int sparShW_cnt;
 extern int sparWR_cnt;
 extern int sparRD_cnt;
+extern int sparReLU_cnt;
 //define types
 typedef int32_t fixed_point_t;
 
 //define prototypes; ordered as they appear in the source file
+void RELU_SPAR(int rs, int temp);
 void RELU_FirstRow(int rs);
 void RELU_FirstColumn(int rs);
 void ColumnToColumn(int rd, int rs, int copy);
+void Activation1stRow(int rs, int rd, int function);
 void RowToColumn(int rd, int rs, int function);
 void ColumnToRow(int rd, int rs, int function);
 void RowToRow(int rd, int rs);

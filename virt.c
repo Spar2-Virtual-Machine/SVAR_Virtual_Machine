@@ -1281,12 +1281,28 @@ void Mul_MV(int rs_m, int rs_v, int rd, AllocationTable *table){
 //	printVReg(rs_v, table);
 }
 
-void RELU_V(int rs, AllocationTable *table){
-	removeVRegFromPRegs(rs, table);
-	for(int i=0; i<table->vreg[rs].rows; i++)
+void ReLU(int rs, AllocationTable *table){
+	removeVRegFromPRegsNoData(0, table);
+	table->vreg[0].rows = SPAR_dimension;
+	table->vreg[0].cols = SPAR_dimension;
+	table->vreg[0].orientation = 0;
+	table->vreg[0].type = 0; //make it a matrix
+
+
+	PrepareRegMM(rs, 0, table);
+	execute(1, table->vreg[0].placement[0], 1, 1);
+//	printPReg(table->vreg[0].placement[0]);
+	for(int i=0; i<Max_PrForVr; i++)
 	{
-		if(table->vreg[rs].data[i] < 0){table->vreg[rs].data[i]=0;}
+		if(table->vreg[rs].placement[i] < 0){break;}
+		execute(10, table->vreg[rs].placement[i], table->vreg[rs].placement[i], table->vreg[0].placement[0]);
 	}
+	removeVRegFromPRegsNoData(0, table);
+	table->vreg[0].rows = table->vreg[rs].rows;
+	table->vreg[0].cols = table->vreg[rs].cols;
+	table->vreg[0].orientation = table->vreg[rs].orientation;
+	table->vreg[0].type = table->vreg[rs].type;
+	table->vreg[0].status = 0;
 }
 
 void Reset_Registers(){

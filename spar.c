@@ -32,6 +32,11 @@ int sparShE_cnt=0;
 int sparShW_cnt=0;
 int sparWR_cnt=0;
 int sparRD_cnt = 0;
+int sparReLU_cnt = 0;
+
+void RELU_SPAR(int rs, int temp){
+	execute(10, rs, rs, temp);
+}
 
 void RELU_FirstRow(int rs){
 	for(int a = 0; a < Array_dim; a++)
@@ -90,12 +95,17 @@ void RowToColumn(int rd, int rs, int function){
 
 	//function: 0 == noOp, 1 == sigmoid, 2 == tanh
 	BIT_SERIAL_mWriteReg(XPAR_BIT_SERIAL_0_S00_AXI_BASEADDR, BIT_SERIAL_S00_AXI_SLV_REG6_OFFSET, function);
+	usleep(1000);
 	execute(8, rs, rs, 0);
+	usleep(1000);
 	ShN_cnt++;
 	int instruction = (6<<26) + (rd<<21) + (rs << 16) + (0 << 11);
 	BIT_SERIAL_mWriteReg(XPAR_BIT_SERIAL_0_S00_AXI_BASEADDR, BIT_SERIAL_S00_AXI_SLV_REG0_OFFSET, instruction);//instruction
+	usleep(1000);
 	BIT_SERIAL_mWriteReg(XPAR_BIT_SERIAL_0_S00_AXI_BASEADDR, BIT_SERIAL_S00_AXI_SLV_REG1_OFFSET, 0x00000003+LEN);//start = 1, reset = 1
+	usleep(1000);
 	BIT_SERIAL_mWriteReg(XPAR_BIT_SERIAL_0_S00_AXI_BASEADDR, BIT_SERIAL_S00_AXI_SLV_REG1_OFFSET, 0x00000001+LEN);//start = 0, reset = 1
+	usleep(1000);
 	ShL_cnt++;
 }
 
@@ -103,12 +113,18 @@ void ColumnToRow(int rd, int rs, int function){
 
 	//function: 0 == noOp, 1 == sigmoid, 2 == tanh
 	BIT_SERIAL_mWriteReg(XPAR_BIT_SERIAL_0_S00_AXI_BASEADDR, BIT_SERIAL_S00_AXI_SLV_REG6_OFFSET, function);
+	usleep(1000);
 	execute(5, rs, rs, 0);
+	usleep(1000);
 	ShR_cnt++; //increase the shift-right count. Not sure as to why this is used.
 	int instruction = (7<<26) + (rd<<21) + (rd << 16) + (0 << 11);  //shift north? Documentation might be out of date
+	usleep(1000);
 	BIT_SERIAL_mWriteReg(XPAR_BIT_SERIAL_0_S00_AXI_BASEADDR, BIT_SERIAL_S00_AXI_SLV_REG0_OFFSET, instruction);//instruction
+	usleep(1000);
 	BIT_SERIAL_mWriteReg(XPAR_BIT_SERIAL_0_S00_AXI_BASEADDR, BIT_SERIAL_S00_AXI_SLV_REG1_OFFSET, 0x00000003+LEN);//start = 1, reset = 1
+	usleep(1000);
 	BIT_SERIAL_mWriteReg(XPAR_BIT_SERIAL_0_S00_AXI_BASEADDR, BIT_SERIAL_S00_AXI_SLV_REG1_OFFSET, 0x00000001+LEN);//start = 0, reset = 1
+	usleep(1000);
 	ShS_cnt++;
 }
 
@@ -589,21 +605,21 @@ int execute(int opcode, int rd, int rs1, int rs2)
 		case 8:
 			sparShN_cnt++;
 			break;
-		case 9:
-			relu_cnt++;
+		case 10:
+			sparReLU_cnt++;
 			break;
 	};
 
 	int instruction = (opcode<<26) + (rd<<21) + (rs1 << 16) + (rs2 << 11);
 	BIT_SERIAL_mWriteReg(XPAR_BIT_SERIAL_0_S00_AXI_BASEADDR, BIT_SERIAL_S00_AXI_SLV_REG1_OFFSET, 0x00000000+LEN);//start = 0, reset = 0
 	BIT_SERIAL_mWriteReg(XPAR_BIT_SERIAL_0_S00_AXI_BASEADDR, BIT_SERIAL_S00_AXI_SLV_REG0_OFFSET, instruction);//instruction
-	usleep_A53(12);
+	usleep_A53(12000);
 	BIT_SERIAL_mWriteReg(XPAR_BIT_SERIAL_0_S00_AXI_BASEADDR, BIT_SERIAL_S00_AXI_SLV_REG1_OFFSET, 0x00000001+LEN);//start = 0, reset = 1
-	usleep_A53(12);
+	usleep_A53(12000);
 	BIT_SERIAL_mWriteReg(XPAR_BIT_SERIAL_0_S00_AXI_BASEADDR, BIT_SERIAL_S00_AXI_SLV_REG1_OFFSET, 0x00000003+LEN);//start = 1, reset = 1
-	usleep_A53(12);
+	usleep_A53(12000);
 	BIT_SERIAL_mWriteReg(XPAR_BIT_SERIAL_0_S00_AXI_BASEADDR, BIT_SERIAL_S00_AXI_SLV_REG1_OFFSET, 0x00000001+LEN);//start = 0, reset = 1
-	usleep_A53(24);
+	usleep_A53(24000);
 	return 0;
 }
 

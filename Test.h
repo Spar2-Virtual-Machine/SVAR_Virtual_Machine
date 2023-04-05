@@ -42,7 +42,7 @@ int ConvertMatrixToVectorTest(AllocationTable *table);
 int ConvertMatrixToVectorTurnedTest(AllocationTable *table);
 int MultiplyAccumulateMatrixVectorSetupTest(AllocationTable *table);
 int MultiplyAccumulateMatrixVectorTest(AllocationTable *table);
-void TestRELU(AllocationTable *table);
+void TestRELU2(AllocationTable *table);
 
 int MLP_Benchmark(AllocationTable *table); //not used
 
@@ -58,5 +58,7 @@ int Test_MulAcc_2Segment_T(AllocationTable *table);
 int Test_MulAcc_4Segment(AllocationTable *table);
 int Test_MulAcc_8Segment(AllocationTable *table);
 int Test_MulAcc_8Segment_T(AllocationTable *table);
+
+void Test_RELU_1Segments(AllocationTable *table);
 
 #endif /* SRC_TEST_H_ */
